@@ -1,0 +1,18 @@
+{
+	"title": "Waymker Geo",
+	"location": "Location",
+	"address": "Address",
+	"street": "Street",
+	"city": "City",
+	"state": "State / Region",
+	"zip": "Postal code",
+	"neighborhood": "Neighborhood",
+	"country": "Country",
+	"lat": "Latitude",
+	"lng": "Longitude",
+	"privacy.public": "Public",
+	"privacy.registered": "Registered users",
+	"privacy.followers": "Mutual follows",
+	"privacy.private": "Only me",
+	"search-placeholder": "Start typing your address..."
+}
