@@ -49,16 +49,6 @@
           <option value="loading" disabled>Loading groups...</option>
         </select>
       </div>
-
-      <!-- Following Filter -->
-      <div>
-        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #333;">Following</label>
-        <select id="waymker-following" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px;">
-          <option value="all">All Users</option>
-          <option value="following">Users I'm Following</option>
-          <option value="notfollowing">Users I'm Not Following</option>
-        </select>
-      </div>
     </div>
 
     <div style="display: flex; gap: 10px;">
@@ -86,7 +76,6 @@
   var minRepInput = document.getElementById('waymker-minrep');
   var roleSelect = document.getElementById('waymker-role');
   var groupSelect = document.getElementById('waymker-group');
-  var followingSelect = document.getElementById('waymker-following');
   
   var allData = {};
   var displayedUsers = [];
@@ -131,7 +120,6 @@
     if (minRepInput.value) params.push('minReputation=' + encodeURIComponent(minRepInput.value));
     if (roleSelect.value) params.push('roles=' + encodeURIComponent(roleSelect.value));
     if (groupSelect.value) params.push('group=' + encodeURIComponent(groupSelect.value));
-    if (followingSelect.value !== 'all') params.push('following=' + encodeURIComponent(followingSelect.value));
 
     var url = '/api/v3/plugins/waymker-geo/users-near-me' + (params.length ? '?' + params.join('&') : '');
 
@@ -215,7 +203,6 @@
     minRepInput.value = '';
     roleSelect.value = '';
     groupSelect.value = '';
-    followingSelect.value = 'all';
     loadUsers();
   });
 
