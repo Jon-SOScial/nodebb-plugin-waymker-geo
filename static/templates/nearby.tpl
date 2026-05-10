@@ -53,13 +53,13 @@
         </select>
       </div>
 
-      <!-- Friends Filter -->
+      <!-- Following Filter -->
       <div>
-        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #333;">Friends</label>
-        <select id="waymker-friends" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px;">
+        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #333;">Following</label>
+        <select id="waymker-following" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px;">
           <option value="all">All Users</option>
-          <option value="friends">My Friends Only</option>
-          <option value="nonfriends">Not My Friends</option>
+          <option value="following">Users I'm Following</option>
+          <option value="notfollowing">Users I'm Not Following</option>
         </select>
       </div>
     </div>
@@ -90,7 +90,7 @@
   var minRepInput = document.getElementById('waymker-minrep');
   var roleSelect = document.getElementById('waymker-role');
   var groupSelect = document.getElementById('waymker-group');
-  var friendsSelect = document.getElementById('waymker-friends');
+  var followingSelect = document.getElementById('waymker-following');
   
   var allData = {};
   var displayedUsers = [];
@@ -142,7 +142,7 @@
     if (minRepInput.value) params.push('minReputation=' + encodeURIComponent(minRepInput.value));
     if (roleSelect.value) params.push('roles=' + encodeURIComponent(roleSelect.value));
     if (groupSelect.value) params.push('group=' + encodeURIComponent(groupSelect.value));
-    if (friendsSelect.value !== 'all') params.push('friends=' + encodeURIComponent(friendsSelect.value));
+    if (followingSelect.value !== 'all') params.push('following=' + encodeURIComponent(followingSelect.value));
 
     var url = '/api/v3/plugins/waymker-geo/users-near-me' + (params.length ? '?' + params.join('&') : '');
     
@@ -158,17 +158,6 @@
 
         allData = data;
         log('Got ' + data.users.length + ' users from API');
-        data.users.forEach(function(u) {
-          var roles = u.roles;
-          if (Array.isArray(roles)) {
-            var roleStr = roles.map(function(r) {
-              return typeof r === 'string' ? r : (r.name || r.slug || JSON.stringify(r));
-            }).join(', ');
-            log(u.username + ' roles: [' + roleStr + ']');
-          } else {
-            log(u.username + ' roles: ' + JSON.stringify(roles));
-          }
-        });
         filterAndDisplay();
       })
       .catch(function(e) {
@@ -241,7 +230,7 @@
     minRepInput.value = '';
     roleSelect.value = '';
     groupSelect.value = '';
-    friendsSelect.value = 'all';
+    followingSelect.value = 'all';
     debugEl.textContent = '';
     loadUsers();
   });
