@@ -13,6 +13,7 @@
       position: relative;
       overflow: hidden;
       border-bottom: 2px solid #e0e0e0;
+      background: #e8eef2;
     }
     
     #waymker-map {
@@ -32,20 +33,21 @@
     
     .waymker-map-btn {
       background: white;
-      border: 1px solid #ddd;
+      border: 2px solid #333;
       border-radius: 6px;
       padding: 10px 12px;
       cursor: pointer;
       font-size: 14px;
       font-weight: 600;
       transition: all 0.2s ease;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       color: #333;
     }
     
     .waymker-map-btn:hover {
-      background: #f5f5f5;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      background: #f0f0f0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transform: scale(1.05);
     }
     
     .waymker-filters-panel {
@@ -91,7 +93,7 @@
     .waymker-filter-input input,
     .waymker-filter-input select {
       padding: 10px 12px;
-      border: 1px solid #ddd;
+      border: 2px solid #ddd;
       border-radius: 5px;
       font-size: 14px;
       background: white;
@@ -102,7 +104,7 @@
     .waymker-filter-input select:focus {
       outline: none;
       border-color: #0066cc;
-      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
     }
     
     .waymker-filter-buttons {
@@ -123,16 +125,19 @@
     .waymker-btn-primary {
       background: #0066cc;
       color: white;
+      border: 2px solid #0052a3;
     }
     
     .waymker-btn-primary:hover {
       background: #0052a3;
-      box-shadow: 0 4px 8px rgba(0, 102, 204, 0.2);
+      box-shadow: 0 4px 8px rgba(0, 102, 204, 0.3);
+      transform: translateY(-1px);
     }
     
     .waymker-btn-secondary {
       background: #f0f0f0;
       color: #333;
+      border: 2px solid #999;
     }
     
     .waymker-btn-secondary:hover {
@@ -155,8 +160,12 @@
     .waymker-status {
       font-size: 14px;
       font-weight: 500;
-      color: #666;
+      color: #333;
       margin-bottom: 16px;
+      padding: 10px;
+      background: #f0f8ff;
+      border-left: 4px solid #0066cc;
+      border-radius: 4px;
     }
     
     .waymker-cards-grid {
@@ -167,7 +176,7 @@
     
     .waymker-user-card {
       background: white;
-      border: 1px solid #e0e0e0;
+      border: 2px solid #ddd;
       border-radius: 8px;
       padding: 16px;
       transition: all 0.2s ease;
@@ -175,7 +184,7 @@
     }
     
     .waymker-user-card:hover {
-      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
       border-color: #0066cc;
       transform: translateY(-2px);
     }
@@ -192,6 +201,7 @@
       border-radius: 50%;
       object-fit: cover;
       background: #f0f0f0;
+      border: 2px solid #ddd;
     }
     
     .waymker-card-info {
@@ -209,11 +219,13 @@
     
     .waymker-card-username:hover {
       color: #0066cc;
+      text-decoration: underline;
     }
     
     .waymker-card-location {
       font-size: 12px;
       color: #666;
+      font-weight: 500;
     }
     
     .waymker-card-details {
@@ -221,42 +233,47 @@
       flex-direction: column;
       gap: 8px;
       padding-top: 12px;
-      border-top: 1px solid #f0f0f0;
+      border-top: 2px solid #f0f0f0;
       font-size: 13px;
     }
     
     .waymker-card-distance {
       font-weight: 700;
-      color: #0066cc;
+      color: #dc143c;
       font-size: 14px;
     }
     
     .waymker-card-role {
-      color: #0066cc;
+      color: #fff;
       font-size: 12px;
       font-weight: 600;
       display: inline-block;
-      background: #e6f0ff;
+      background: #0066cc;
       padding: 4px 8px;
       border-radius: 4px;
       width: fit-content;
     }
     
     .waymker-card-reputation {
-      color: #666;
+      color: #333;
       font-size: 13px;
+      font-weight: 500;
     }
     
     .waymker-card-approximate {
-      color: #ff9500;
+      color: #ff6600;
       font-size: 12px;
-      font-style: italic;
+      font-weight: 600;
+      background: #fff3e0;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border-left: 3px solid #ff6600;
     }
     
     .waymker-search-bar {
       width: 100%;
       padding: 12px 16px;
-      border: 1px solid #ddd;
+      border: 2px solid #ddd;
       border-radius: 6px;
       font-size: 14px;
       margin-bottom: 16px;
@@ -266,7 +283,7 @@
     .waymker-search-bar:focus {
       outline: none;
       border-color: #0066cc;
-      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
     }
 
     @media (max-width: 768px) {
@@ -308,9 +325,9 @@
         <i class="fa fa-location-arrow"></i> My Location
       </button>
       <select id="waymker-layer" class="waymker-map-btn" style="padding: 8px 12px;">
-        <option value="osm">OpenStreetMap</option>
-        <option value="satellite">Satellite</option>
-        <option value="light">Light</option>
+        <option value="osm">🗺️ OpenStreetMap</option>
+        <option value="satellite">🛰️ Satellite</option>
+        <option value="light">☀️ Light</option>
       </select>
     </div>
   </div>
@@ -318,7 +335,7 @@
   <div class="waymker-filters-panel">
     <div class="waymker-filters-content">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 class="waymker-filters-title">Filters</h3>
+        <h3 class="waymker-filters-title">🔍 Find Nearby Users</h3>
       </div>
       
       <input type="text" id="waymker-search" class="waymker-search-bar" placeholder="Search by username..." />
@@ -518,20 +535,20 @@
         if (data.callerLocation) {
           callerLocation = data.callerLocation;
           var callerMarker = L.circleMarker([callerLocation.latitude, callerLocation.longitude], {
-            radius: 8,
+            radius: 10,
             fillColor: '#0066cc',
-            color: '#fff',
+            color: '#000',
             weight: 3,
             opacity: 1,
-            fillOpacity: 0.8
-          }).bindPopup('<div style="font-weight:700;">Your Location</div>');
+            fillOpacity: 0.95
+          }).bindPopup('<div style="font-weight:700; color:#0066cc;">📍 Your Location</div>');
           markerClusterGroup.addLayer(callerMarker);
         }
         
         filterAndDisplay();
       })
       .catch(function(e) {
-        statusEl.innerHTML = '<div style="color: #c00;">Error: ' + e.message + '</div>';
+        statusEl.innerHTML = '<div style="color: #c00;">❌ Error: ' + e.message + '</div>';
       });
   }
 
@@ -544,13 +561,13 @@
     markerClusterGroup.clearLayers();
     if (callerLocation) {
       var callerMarker = L.circleMarker([callerLocation.latitude, callerLocation.longitude], {
-        radius: 8,
+        radius: 10,
         fillColor: '#0066cc',
-        color: '#fff',
+        color: '#000',
         weight: 3,
         opacity: 1,
-        fillOpacity: 0.8
-      }).bindPopup('<div style="font-weight:700;">Your Location</div>');
+        fillOpacity: 0.95
+      }).bindPopup('<div style="font-weight:700; color:#0066cc;">📍 Your Location</div>');
       markerClusterGroup.addLayer(callerMarker);
     }
 
@@ -563,21 +580,22 @@
       console.log('[waymker-geo] User:', u.username, 'mapLat:', mapLat, 'mapLng:', mapLng, 'isApproximate:', u.isApproximate);
       
       if (mapLat && mapLng) {
-        var color = allData.isPrivileged ? '#ff6b6b' : '#ffd93d';
+        // Crimson red for privileged, orange-red for regular users - much more visible
+        var color = allData.isPrivileged ? '#dc143c' : '#ff4500';
         var marker = L.circleMarker([mapLat, mapLng], {
-          radius: 6,
+          radius: 10,
           fillColor: color,
-          color: '#fff',
-          weight: 2,
+          color: '#000',
+          weight: 3,
           opacity: 1,
-          fillOpacity: 0.8
+          fillOpacity: 0.95
         });
 
-        var approxNote = u.isApproximate ? '<div style="color:#ff9500;font-size:11px;">📍 Approximate (' + u.approximateLevel + ')</div>' : '';
+        var approxNote = u.isApproximate ? '<div style="color:#ff6600;font-size:11px;font-weight:600;">📍 Approximate (' + u.approximateLevel + ')</div>' : '';
         var popupContent = '<div style="font-size:13px;">' +
           '<div style="font-weight:700;"><a href="/user/' + u.userslug + '" style="color:#0066cc;text-decoration:none;">' + u.username + '</a></div>' +
           '<div style="color:#666;">📍 ' + (u.neighborhood || u.city || 'Unknown') + '</div>' +
-          '<div style="color:#0066cc;font-weight:600;">' + u.distance.toFixed(1) + ' miles</div>' +
+          '<div style="color:#dc143c;font-weight:600;">' + u.distance.toFixed(1) + ' miles</div>' +
           approxNote +
           '</div>';
 
@@ -600,7 +618,7 @@
       return;
     }
 
-    statusEl.textContent = 'Found ' + displayedUsers.length + ' user(s)';
+    statusEl.textContent = '✓ Found ' + displayedUsers.length + ' user(s)';
 
     var html = '';
     displayedUsers.forEach(function(u) {
@@ -633,7 +651,7 @@
         '</div>' +
         '</div>' +
         '<div class="waymker-card-details">' +
-        '<div class="waymker-card-distance">📍 ' + u.distance.toFixed(1) + ' miles</div>' +
+        '<div class="waymker-card-distance">📍 ' + u.distance.toFixed(1) + ' miles away</div>' +
         roleStr +
         repStr +
         approxStr +
