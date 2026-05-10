@@ -387,6 +387,7 @@
   var centerBtn = document.getElementById('waymker-center');
   var layerSelect = document.getElementById('waymker-layer');
 
+  // Initialize map
   function initMap() {
     map = L.map('waymker-map').setView([30.27, -97.74], 11);
     markerClusterGroup = L.markerClusterGroup({
@@ -398,22 +399,20 @@
     map.addLayer(markerClusterGroup);
   }
 
+  // Setup different tile layers
   function setupLayers() {
-    var osmUrl = 'https://{~lb}s{~rb}.tile.openstreetmap.org/{~lb}z{~rb}/{~lb}x{~rb}/{~lb}y{~rb}.png';
-    var satelliteUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{~lb}z{~rb}/{~lb}y{~rb}/{~lb}x{~rb}';
-    var lightUrl = 'https://{~lb}s{~rb}.basemaps.cartocdn.com/light_all/{~lb}z{~rb}/{~lb}x{~rb}/{~lb}y{~rb}.png';
-
-    var osmLayer = L.tileLayer(osmUrl, {
+    js
+    var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/' + '{z}/{x}/{y}' + '.png', {
       attribution: '© OpenStreetMap contributors',
       maxZoom: 19
     });
 
-    var satelliteLayer = L.tileLayer(satelliteUrl, {
+    var satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + '{z}/{y}/{x}', {
       attribution: '© Esri',
       maxZoom: 19
     });
 
-    var lightLayer = L.tileLayer(lightUrl, {
+    var lightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/' + '{z}/{x}/{y}' + '.png', {
       attribution: '© CartoDB',
       maxZoom: 19
     });
@@ -542,7 +541,8 @@
 
     displayedUsers.forEach(function(u) {
       if (u.latitude && u.longitude) {
-        var color = allData.isPrivileged ? '#ff6b6b' : '#ffd93d';
+        var isPrivileged = allData.isPrivileged;
+        var color = isPrivileged ? '#ff6b6b' : '#ffd93d';
         var marker = L.circleMarker([u.latitude, u.longitude], {
           radius: 6,
           fillColor: color,
@@ -601,7 +601,7 @@
 
       html += '<div class="waymker-user-card" data-uid="' + u.uid + '">' +
         '<div class="waymker-card-header">' +
-        '<img src="' + picture + '" alt="" class="waymker-card-avatar" onerror="this.style.display=' + "'" + 'none' + "'" + '" />' +
+        '<img src="' + picture + '" alt="" class="waymker-card-avatar" onerror="this.style.display=\'none\'" />' +
         '<div class="waymker-card-info">' +
         '<a href="/user/' + u.userslug + '" class="waymker-card-username">' + u.username + '</a>' +
         '<div class="waymker-card-location">📍 ' + locationStr + '</div>' +
