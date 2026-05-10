@@ -234,10 +234,12 @@
       object-fit: cover;
       background: #f0f0f0;
       border: 2px solid #ddd;
+      flex-shrink: 0;
     }
     
     .waymker-card-info {
       flex: 1;
+      min-width: 0;
     }
     
     .waymker-card-username {
@@ -245,9 +247,12 @@
       font-size: 15px;
       color: #0066cc;
       text-decoration: none;
-      display: block;
+      display: inline-block;
+      width: auto;
+      max-width: 100%;
       margin-bottom: 4px;
       cursor: pointer;
+      word-break: break-word;
     }
     
     .waymker-card-username:hover {
@@ -258,6 +263,8 @@
       font-size: 12px;
       color: #666;
       font-weight: 500;
+      display: block;
+      margin-top: 4px;
     }
     
     .waymker-card-details {
@@ -460,8 +467,8 @@
 
       var usernameLink = card.querySelector('.waymker-card-username');
       
-      // If clicking the username link, allow navigation
-      if (e.target === usernameLink || usernameLink.contains(e.target)) {
+      // If clicking the username link directly, allow navigation
+      if (usernameLink && (e.target === usernameLink || usernameLink.contains(e.target))) {
         return;
       }
 
