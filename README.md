@@ -248,3 +248,53 @@ nodebb-plugin-waymker-geo/
 ## License
 
 MIT.
+
+## Autocomplete Configuration
+
+### Mapbox Address Autocomplete (Custom Javascript)
+
+The address autocomplete functionality is **NOT** stored in this plugin repository. Instead, it lives in NodeBB's **Custom Javascript** settings for better reliability and easier maintenance.
+
+#### Location
+**Admin Panel → Appearance → Custom Content (HTML/JS/CSS) → Custom Javascript**
+
+#### What It Does
+- Provides real-time Mapbox geocoding suggestions as users type an address
+- Auto-fills all 8 geographic fields: address, neighborhood, zipCode, city, state, country, latitude, longitude
+- Works on both user profile edit page and group edit page
+- Smart proximity bias: uses user's existing saved location, falls back to browser geolocation, defaults to `country=us`
+- Respects Mapbox API rate limits with 300ms debounce
+
+#### Configuration
+**Mapbox Token:**
+- Stored in plugin settings: `/admin/plugins/waymker-geo`
+- Must have Geocoding API permission enabled
+- Public token only (no secret tokens)
+
+**Proximity Bias:**
+- **First-time users:** Browser geolocation (asks permission) or `country=us`
+- **Returning users:** Uses their saved lat/lng coordinates for proximity bias
+- Ensures suggestions are relevant to the user's location
+
+#### To Update Autocomplete Code
+1. Go to **Admin → Appearance → Custom Content → Custom Javascript**
+2. Find the "Waymker Geo - Mapbox Address Autocomplete" section
+3. Make your changes
+4. Click **"Save changes"** (live reload enabled)
+5. No plugin rebuild needed!
+
+#### Code Structure
+```javascript
+// Two separate initialization functions:
+// 1. initializeUserAddressAutocomplete() → handles waymkerGeo:address field
+// 2. initializeGroupAddressAutocomplete() → handles group address field
+// Both share proximity logic but group uses country=us only
+```
+
+#### Troubleshooting
+- **Not suggesting addresses?** Check Mapbox token in `/admin/plugins/waymker-geo`
+- **Not filling fields?** Verify custom fields exist and are whitelisted in plugin
+- **Australia results when typing?** Browser geolocation returning international results; user needs to save a US address first
+- **Unreliable after clearing field?** Clear browser cache or hard refresh (Ctrl+Shift+R)
+
+---
