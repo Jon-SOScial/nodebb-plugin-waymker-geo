@@ -1,6 +1,9 @@
 <div class="waymker-nearby-page" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
   <h1 style="margin-bottom: 30px; font-size: 32px;"><i class="fa fa-map-marker-alt"></i> Users Near Me</h1>
 
+  <!-- Debug Info -->
+  <div id="waymker-debug" style="background: #f5f5f5; border: 1px solid #ddd; padding: 10px; margin-bottom: 20px; font-size: 12px; max-height: 100px; overflow: auto; font-family: monospace;"></div>
+
   <!-- Search Bar -->
   <div style="margin-bottom: 25px;">
     <input type="text" id="waymker-search" placeholder="Search by username..." style="width: 100%; padding: 14px 16px; font-size: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,0.05);" />
@@ -76,6 +79,7 @@
 
 <script>
 (function() {
+  var debugEl = document.getElementById('waymker-debug');
   var searchInput = document.getElementById('waymker-search');
   var statusEl = document.getElementById('waymker-nearby-status');
   var resultsEl = document.getElementById('waymker-nearby-results');
@@ -91,20 +95,21 @@
   var allData = {};
   var displayedUsers = [];
 
+  function log(msg) {
+    console.log('[waymker-geo]', msg);
+    debugEl.textContent += msg + '\n';
+    debugEl.scrollTop = debugEl.scrollHeight;
+  }
+
   function loadGroups() {
     fetch('/api/v3/groups?truncate=true')
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        console.log('[waymker-geo] Groups response:', data);
         var groupsList = [];
         if (data.response && data.response.groups && Array.isArray(data.response.groups)) {
           groupsList = data.response.groups;
-        } else if (data.response && Array.isArray(data.response)) {
-          groupsList = data.response;
         } else if (data.groups && Array.isArray(data.groups)) {
           groupsList = data.groups;
-        } else if (Array.isArray(data)) {
-          groupsList = data;
         }
         
         if (groupsList && groupsList.length > 0) {
@@ -119,14 +124,11 @@
               groupSelect.appendChild(opt);
             }
           });
-          console.log('[waymker-geo] Groups loaded: ' + (groupSelect.options.length - 1));
-        } else {
-          groupSelect.innerHTML = '<option value="">-- No Groups Found --</option>';
+          log('Loaded ' + (groupSelect.options.length - 1) + ' groups');
         }
       })
       .catch(function(e) { 
-        console.error('[waymker-geo] Error loading groups:', e);
-        groupSelect.innerHTML = '<option value="">-- Error Loading --</option>';
+        log('Error loading groups: ' + e);
       });
   }
 
@@ -143,6 +145,8 @@
     if (friendsSelect.value !== 'all') params.push('friends=' + encodeURIComponent(friendsSelect.value));
 
     var url = '/api/v3/plugins/waymker-geo/users-near-me' + (params.length ? '?' + params.join('&') : '');
+    
+    log('Query: ' + url);
 
     fetch(url)
       .then(function(r) { return r.json(); })
@@ -151,11 +155,25 @@
           statusEl.innerHTML = '<div style="color: #c00;">' + data.error + '</div>';
           return;
         }
+
         allData = data;
+        log('Got ' + data.users.length + ' users from API');
+        data.users.forEach(function(u) {
+          var roles = u.roles;
+          if (Array.isArray(roles)) {
+            var roleStr = roles.map(function(r) {
+              return typeof r === 'string' ? r : (r.name || r.slug || JSON.stringify(r));
+            }).join(', ');
+            log(u.username + ' roles: [' + roleStr + ']');
+          } else {
+            log(u.username + ' roles: ' + JSON.stringify(roles));
+          }
+        });
         filterAndDisplay();
       })
       .catch(function(e) {
         statusEl.innerHTML = '<div style="color: #c00;">Error: ' + e.message + '</div>';
+        log('Error: ' + e.message);
       });
   }
 
@@ -171,7 +189,7 @@
       return;
     }
 
-    statusEl.textContent = 'Found ' + displayedUsers.length + ' user' + (displayedUsers.length === 1 ? '' : 's');
+    statusEl.textContent = 'Found ' + displayedUsers.length + ' user(s)';
 
     var html = '';
     displayedUsers.forEach(function(u) {
@@ -224,6 +242,7 @@
     roleSelect.value = '';
     groupSelect.value = '';
     friendsSelect.value = 'all';
+    debugEl.textContent = '';
     loadUsers();
   });
 
