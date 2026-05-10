@@ -1,782 +1,1333 @@
-<div class="waymker-nearby-container">
-  <style>
-    .waymker-nearby-container {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      background: #f8f9fa;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    }
-    
-    .waymker-map-wrapper {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-      border-bottom: 2px solid #e0e0e0;
-      background: #e8eef2;
-    }
-    
-    #waymker-map {
-      width: 100%;
-      height: 100%;
-    }
+<!-- Leaflet & MarkerCluster assets -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
-    .marker-cluster {
-      background-clip: padding-box;
-      border-radius: 40px;
-      border: 3px solid rgba(0,0,0,0.4);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+<style>
+	/* ============================================================
+	   WAYMKER-GEO :: NEARBY DIRECTORY (Phase 4)
+	   ============================================================ */
 
-    .marker-cluster span {
-      font-size: 18px;
-      font-weight: 900;
-      color: white;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
-      font-family: 'Arial Black', sans-serif;
-      line-height: 1;
-    }
+	.wg-page {
+		max-width: 1400px;
+		margin: 0 auto;
+		padding: 16px;
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	}
 
-    .marker-cluster.marker-cluster-small {
-      background-color: rgba(100, 200, 80, 0.95);
-    }
+	/* ---------- Header ---------- */
+	.wg-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		margin-bottom: 12px;
+		flex-wrap: wrap;
+	}
+	.wg-title {
+		margin: 0;
+		font-size: 22px;
+		font-weight: 700;
+		color: #1a1a1a;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.wg-title-icon {
+		display: inline-block;
+		width: 28px;
+		height: 28px;
+		background: linear-gradient(135deg, #0066cc 0%, #00aaff 100%);
+		border-radius: 50%;
+		position: relative;
+	}
+	.wg-title-icon::after {
+		content: '';
+		position: absolute;
+		top: 50%; left: 50%;
+		width: 10px; height: 10px;
+		background: #fff;
+		border-radius: 50%;
+		transform: translate(-50%, -50%);
+	}
+	.wg-count-badge {
+		background: #0066cc;
+		color: #fff;
+		font-size: 12px;
+		font-weight: 600;
+		padding: 4px 10px;
+		border-radius: 12px;
+	}
 
-    .marker-cluster.marker-cluster-medium {
-      background-color: rgba(255, 180, 50, 0.95);
-    }
+	/* ---------- Compact Filter Bar ---------- */
+	.wg-filter-bar {
+		display: flex;
+		gap: 8px;
+		align-items: center;
+		background: #fff;
+		border: 1px solid #e0e0e0;
+		border-radius: 10px;
+		padding: 8px;
+		margin-bottom: 12px;
+		box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+		flex-wrap: wrap;
+	}
+	.wg-search-wrap {
+		flex: 2 1 220px;
+		min-width: 180px;
+		position: relative;
+	}
+	.wg-search-wrap::before {
+		content: '';
+		position: absolute;
+		left: 10px;
+		top: 50%;
+		width: 14px; height: 14px;
+		border: 2px solid #888;
+		border-radius: 50%;
+		transform: translateY(-60%);
+		pointer-events: none;
+	}
+	.wg-search-wrap::after {
+		content: '';
+		position: absolute;
+		left: 21px;
+		top: 50%;
+		width: 7px; height: 2px;
+		background: #888;
+		transform: translateY(2px) rotate(45deg);
+		transform-origin: left center;
+		pointer-events: none;
+	}
+	.wg-search-input {
+		width: 100%;
+		padding: 7px 10px 7px 32px;
+		border: 1px solid #d0d0d0;
+		border-radius: 6px;
+		font-size: 13px;
+		outline: none;
+		transition: border-color 0.15s, box-shadow 0.15s;
+		background: #fafafa;
+	}
+	.wg-search-input:focus {
+		border-color: #0066cc;
+		background: #fff;
+		box-shadow: 0 0 0 3px rgba(0,102,204,0.12);
+	}
+	.wg-select {
+		padding: 7px 10px;
+		border: 1px solid #d0d0d0;
+		border-radius: 6px;
+		font-size: 13px;
+		background: #fafafa;
+		outline: none;
+		cursor: pointer;
+		flex: 1 1 110px;
+		min-width: 100px;
+		transition: border-color 0.15s, box-shadow 0.15s;
+	}
+	.wg-select:focus {
+		border-color: #0066cc;
+		background: #fff;
+		box-shadow: 0 0 0 3px rgba(0,102,204,0.12);
+	}
+	.wg-reset-btn {
+		padding: 7px 14px;
+		background: transparent;
+		color: #666;
+		border: 1px solid #d0d0d0;
+		border-radius: 6px;
+		font-size: 12px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.15s;
+		flex: 0 0 auto;
+	}
+	.wg-reset-btn:hover {
+		background: #f0f0f0;
+		color: #333;
+		border-color: #aaa;
+	}
 
-    .marker-cluster.marker-cluster-large {
-      background-color: rgba(255, 100, 50, 0.95);
-    }
-    
-    .waymker-map-controls {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      z-index: 999;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    
-    .waymker-map-btn {
-      background: white;
-      border: 2px solid #333;
-      border-radius: 6px;
-      padding: 10px 12px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-      transition: all 0.2s ease;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      color: #333;
-    }
-    
-    .waymker-map-btn:hover {
-      background: #f0f0f0;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      transform: scale(1.05);
-    }
-    
-    .waymker-filters-panel {
-      background: white;
-      padding: 20px;
-      border-bottom: 2px solid #e0e0e0;
-      overflow: visible;
-    }
-    
-    .waymker-filters-content {
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-    
-    .waymker-filters-title {
-      font-size: 16px;
-      font-weight: 700;
-      margin: 0 0 16px 0;
-      color: #333;
-    }
-    
-    .waymker-filters-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-    
-    .waymker-filter-input {
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .waymker-filter-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: #666;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .waymker-filter-input input,
-    .waymker-filter-input select {
-      padding: 10px 12px;
-      border: 2px solid #ddd;
-      border-radius: 5px;
-      font-size: 14px;
-      background: white;
-      color: #333;
-    }
-    
-    .waymker-filter-input input:focus,
-    .waymker-filter-input select:focus {
-      outline: none;
-      border-color: #0066cc;
-      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
-    }
-    
-    .waymker-filter-buttons {
-      display: flex;
-      gap: 10px;
-    }
-    
-    .waymker-btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 14px;
-      transition: all 0.2s ease;
-    }
-    
-    .waymker-btn-primary {
-      background: #0066cc;
-      color: white;
-      border: 2px solid #0052a3;
-    }
-    
-    .waymker-btn-primary:hover {
-      background: #0052a3;
-      box-shadow: 0 4px 8px rgba(0, 102, 204, 0.3);
-      transform: translateY(-1px);
-    }
-    
-    .waymker-btn-secondary {
-      background: #f0f0f0;
-      color: #333;
-      border: 2px solid #999;
-    }
-    
-    .waymker-btn-secondary:hover {
-      background: #e0e0e0;
-    }
-    
-    .waymker-results-panel {
-      flex: 0 0 auto;
-      background: white;
-      padding: 20px;
-      overflow-y: auto;
-      max-height: 40vh;
-    }
-    
-    .waymker-results-content {
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-    
-    .waymker-status {
-      font-size: 14px;
-      font-weight: 500;
-      color: #333;
-      margin-bottom: 16px;
-      padding: 10px;
-      background: #f0f8ff;
-      border-left: 4px solid #0066cc;
-      border-radius: 4px;
-    }
-    
-    .waymker-cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 16px;
-    }
-    
-    .waymker-user-card {
-      background: white;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      padding: 16px;
-      transition: all 0.2s ease;
-      cursor: pointer;
-      user-select: none;
-    }
-    
-    .waymker-user-card:hover {
-      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-      border-color: #dc143c;
-      transform: translateY(-2px);
-    }
-    
-    .waymker-card-header {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    
-    .waymker-card-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      object-fit: cover;
-      background: #f0f0f0;
-      border: 2px solid #ddd;
-      flex-shrink: 0;
-    }
-    
-    .waymker-card-info {
-      flex: 1;
-      min-width: 0;
-    }
-    
-    .waymker-card-username {
-      font-weight: 700;
-      font-size: 15px;
-      color: #0066cc;
-      text-decoration: none;
-      display: inline-block;
-      width: auto;
-      max-width: 100%;
-      margin-bottom: 4px;
-      cursor: pointer;
-      word-break: break-word;
-    }
-    
-    .waymker-card-username:hover {
-      text-decoration: underline;
-    }
-    
-    .waymker-card-location {
-      font-size: 12px;
-      color: #666;
-      font-weight: 500;
-      display: block;
-      margin-top: 4px;
-    }
-    
-    .waymker-card-details {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding-top: 12px;
-      border-top: 2px solid #f0f0f0;
-      font-size: 13px;
-    }
-    
-    .waymker-card-distance {
-      font-weight: 700;
-      color: #dc143c;
-      font-size: 14px;
-    }
-    
-    .waymker-card-role {
-      color: #fff;
-      font-size: 12px;
-      font-weight: 600;
-      display: inline-block;
-      background: #0066cc;
-      padding: 4px 8px;
-      border-radius: 4px;
-      width: fit-content;
-    }
-    
-    .waymker-card-reputation {
-      color: #333;
-      font-size: 13px;
-      font-weight: 500;
-    }
-    
-    .waymker-card-approximate {
-      color: #ff6600;
-      font-size: 12px;
-      font-weight: 600;
-      background: #fff3e0;
-      padding: 4px 8px;
-      border-radius: 4px;
-      border-left: 3px solid #ff6600;
-    }
-    
-    .waymker-search-bar {
-      width: 100%;
-      padding: 12px 16px;
-      border: 2px solid #ddd;
-      border-radius: 6px;
-      font-size: 14px;
-      margin-bottom: 16px;
-      box-sizing: border-box;
-    }
-    
-    .waymker-search-bar:focus {
-      outline: none;
-      border-color: #0066cc;
-      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
-    }
+	/* ---------- Map ---------- */
+	.wg-map-wrap {
+		position: relative;
+		height: 480px;
+		border-radius: 10px;
+		overflow: hidden;
+		border: 1px solid #e0e0e0;
+		box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+		margin-bottom: 16px;
+	}
+	#wg-map {
+		width: 100%;
+		height: 100%;
+	}
+	.wg-map-overlay-btn {
+		position: absolute;
+		z-index: 1000;
+		background: #fff;
+		border: 1px solid #ccc;
+		border-radius: 6px;
+		padding: 6px 10px;
+		font-size: 12px;
+		font-weight: 500;
+		cursor: pointer;
+		box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+		transition: background 0.15s;
+	}
+	.wg-map-overlay-btn:hover {
+		background: #f5f5f5;
+	}
+	.wg-fullscreen-btn {
+		top: 10px;
+		right: 10px;
+	}
+	.wg-mylocation-btn {
+		top: 50px;
+		right: 10px;
+	}
+	.wg-layer-switcher {
+		bottom: 10px;
+		right: 10px;
+		display: flex;
+		gap: 4px;
+		flex-direction: column;
+	}
+	.wg-layer-switcher button {
+		background: #fff;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		padding: 4px 8px;
+		font-size: 11px;
+		cursor: pointer;
+	}
+	.wg-layer-switcher button.active {
+		background: #0066cc;
+		color: #fff;
+		border-color: #0066cc;
+	}
 
-    @media (max-width: 768px) {
-      .waymker-nearby-container {
-        height: auto;
-        flex-direction: column;
-      }
-      
-      .waymker-map-wrapper {
-        height: 400px;
-        border-bottom: 2px solid #e0e0e0;
-      }
-      
-      .waymker-filters-panel {
-        max-height: none;
-      }
-      
-      .waymker-results-panel {
-        max-height: none;
-      }
-      
-      .waymker-cards-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .waymker-filters-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+	/* ---------- Results Panel ---------- */
+	.wg-results-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 10px;
+		padding: 0 4px;
+	}
+	.wg-results-title {
+		font-size: 14px;
+		font-weight: 600;
+		color: #333;
+		margin: 0;
+	}
+	.wg-results-info {
+		font-size: 12px;
+		color: #666;
+	}
+	.wg-results-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 12px;
+		margin-bottom: 16px;
+	}
 
-  <div class="waymker-map-wrapper">
-    <div id="waymker-map"></div>
-    <div class="waymker-map-controls">
-      <button id="waymker-fullscreen" class="waymker-map-btn" title="Fullscreen">
-        <i class="fa fa-expand"></i> Fullscreen
-      </button>
-      <button id="waymker-center" class="waymker-map-btn" title="Center on my location">
-        <i class="fa fa-location-arrow"></i> My Location
-      </button>
-      <select id="waymker-layer" class="waymker-map-btn" style="padding: 8px 12px;">
-        <option value="osm">🗺️ OpenStreetMap</option>
-        <option value="satellite">🛰️ Satellite</option>
-        <option value="light">☀️ Light</option>
-      </select>
-    </div>
-  </div>
+	/* ---------- User Card ---------- */
+	.wg-card {
+		background: #fff;
+		border: 1px solid #e0e0e0;
+		border-radius: 10px;
+		padding: 14px;
+		cursor: pointer;
+		transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		min-height: 180px;
+	}
+	.wg-card:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+		border-color: #0066cc;
+	}
+	.wg-card-top {
+		display: flex;
+		gap: 12px;
+		align-items: flex-start;
+	}
+	.wg-avatar {
+		width: 48px;
+		height: 48px;
+		border-radius: 50%;
+		flex-shrink: 0;
+		background: linear-gradient(135deg, #0066cc 0%, #00aaff 100%);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: #fff;
+		font-weight: 700;
+		font-size: 18px;
+		overflow: hidden;
+	}
+	.wg-avatar img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+	.wg-card-info {
+		flex: 1;
+		min-width: 0;
+	}
+	.wg-username-link {
+		font-size: 15px;
+		font-weight: 600;
+		color: #0066cc;
+		text-decoration: none;
+		display: inline-block;
+		max-width: calc(100% - 30px);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		vertical-align: middle;
+	}
+	.wg-username-link:hover {
+		text-decoration: underline;
+	}
+	.wg-location-line {
+		font-size: 12px;
+		color: #666;
+		margin-top: 2px;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+	.wg-distance-pill {
+		display: inline-block;
+		background: #f0f8ff;
+		color: #0066cc;
+		font-size: 11px;
+		font-weight: 600;
+		padding: 2px 8px;
+		border-radius: 10px;
+		margin-top: 6px;
+	}
+	.wg-approx-badge {
+		display: inline-block;
+		background: #fff3e0;
+		color: #ff6600;
+		font-size: 10px;
+		font-weight: 600;
+		padding: 2px 6px;
+		border-radius: 8px;
+		margin-top: 6px;
+		margin-left: 4px;
+	}
 
-  <div class="waymker-filters-panel">
-    <div class="waymker-filters-content">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 class="waymker-filters-title">🔍 Find Nearby Users</h3>
-      </div>
-      
-      <input type="text" id="waymker-search" class="waymker-search-bar" placeholder="Search by username..." />
-      
-      <div class="waymker-filters-grid">
-        <div class="waymker-filter-input">
-          <label class="waymker-filter-label">Radius (miles)</label>
-          <input type="number" id="waymker-radius" placeholder="Any distance" />
-        </div>
-        <div class="waymker-filter-input">
-          <label class="waymker-filter-label">Results Limit</label>
-          <input type="number" id="waymker-limit" value="50" min="1" max="200" />
-        </div>
-        <div class="waymker-filter-input">
-          <label class="waymker-filter-label">Min Reputation</label>
-          <input type="number" id="waymker-minrep" placeholder="Any reputation" />
-        </div>
-        <div class="waymker-filter-input">
-          <label class="waymker-filter-label">Role</label>
-          <select id="waymker-role">
-            <option value="">-- Any Role --</option>
-            <option value="administrator">Administrator</option>
-            <option value="moderator">Moderator</option>
-            <option value="user">Regular User</option>
-          </select>
-        </div>
-        <div class="waymker-filter-input">
-          <label class="waymker-filter-label">Group</label>
-          <select id="waymker-group">
-            <option value="">-- Any Group --</option>
-            <option value="loading" disabled>Loading groups...</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="waymker-filter-buttons">
-        <button id="waymker-refresh" class="waymker-btn waymker-btn-primary">Apply Filters</button>
-        <button id="waymker-reset" class="waymker-btn waymker-btn-secondary">Reset</button>
-      </div>
-    </div>
-  </div>
+	/* Three-dot menu */
+	.wg-menu-btn {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		width: 26px;
+		height: 26px;
+		border-radius: 50%;
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: #999;
+		font-size: 18px;
+		line-height: 1;
+		transition: background 0.15s, color 0.15s;
+	}
+	.wg-menu-btn:hover {
+		background: #f0f0f0;
+		color: #333;
+	}
+	.wg-menu-dropdown {
+		position: absolute;
+		top: 38px;
+		right: 10px;
+		background: #fff;
+		border: 1px solid #e0e0e0;
+		border-radius: 8px;
+		box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+		z-index: 100;
+		min-width: 160px;
+		overflow: hidden;
+	}
+	.wg-menu-dropdown button {
+		display: block;
+		width: 100%;
+		text-align: left;
+		padding: 10px 14px;
+		background: transparent;
+		border: none;
+		font-size: 13px;
+		color: #333;
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+	.wg-menu-dropdown button:hover {
+		background: #f5f5f5;
+	}
 
-  <div class="waymker-results-panel">
-    <div class="waymker-results-content">
-      <div class="waymker-status" id="waymker-nearby-status"></div>
-      <div class="waymker-cards-grid" id="waymker-nearby-results"></div>
-    </div>
-  </div>
+	/* Roles row */
+	.wg-roles-row {
+		margin-top: 8px;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px;
+	}
+	.wg-role-badge {
+		display: inline-block;
+		background: #e8f0fe;
+		color: #0066cc;
+		font-size: 10px;
+		font-weight: 600;
+		padding: 2px 7px;
+		border-radius: 8px;
+		text-transform: uppercase;
+		letter-spacing: 0.3px;
+	}
+	.wg-role-badge.admin { background: #fce4ec; color: #c2185b; }
+	.wg-role-badge.mod   { background: #e8f5e9; color: #2e7d32; }
+
+	/* Stats row */
+	.wg-stats-row {
+		display: flex;
+		justify-content: space-around;
+		margin-top: 10px;
+		padding: 8px 0;
+		border-top: 1px solid #f0f0f0;
+		border-bottom: 1px solid #f0f0f0;
+	}
+	.wg-stat {
+		text-align: center;
+		flex: 1;
+	}
+	.wg-stat-num {
+		font-size: 14px;
+		font-weight: 700;
+		color: #333;
+		line-height: 1;
+	}
+	.wg-stat-label {
+		font-size: 10px;
+		color: #888;
+		text-transform: uppercase;
+		letter-spacing: 0.3px;
+		margin-top: 3px;
+	}
+
+	/* Action buttons */
+	.wg-actions {
+		display: flex;
+		gap: 6px;
+		margin-top: 10px;
+	}
+	.wg-action-btn {
+		flex: 1;
+		padding: 7px 10px;
+		border-radius: 6px;
+		font-size: 12px;
+		font-weight: 600;
+		cursor: pointer;
+		border: none;
+		transition: all 0.15s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 4px;
+	}
+	.wg-follow-btn {
+		background: #0066cc;
+		color: #fff;
+	}
+	.wg-follow-btn:hover {
+		background: #0052a3;
+	}
+	.wg-follow-btn.following {
+		background: #e0e0e0;
+		color: #555;
+	}
+	.wg-follow-btn.following:hover {
+		background: #d0d0d0;
+	}
+	.wg-chat-btn {
+		background: #f0f0f0;
+		color: #333;
+	}
+	.wg-chat-btn:hover {
+		background: #e0e0e0;
+	}
+
+	/* ---------- Loading / Empty States ---------- */
+	.wg-loading {
+		text-align: center;
+		padding: 24px;
+		color: #888;
+		font-size: 13px;
+	}
+	.wg-spinner {
+		display: inline-block;
+		width: 24px;
+		height: 24px;
+		border: 3px solid #e0e0e0;
+		border-top-color: #0066cc;
+		border-radius: 50%;
+		animation: wg-spin 0.8s linear infinite;
+	}
+	@keyframes wg-spin {
+		to { transform: rotate(360deg); }
+	}
+	.wg-empty {
+		grid-column: 1 / -1;
+		text-align: center;
+		padding: 40px 20px;
+		color: #888;
+		font-size: 14px;
+		background: #fafafa;
+		border: 1px dashed #ddd;
+		border-radius: 10px;
+	}
+	.wg-empty-icon {
+		font-size: 36px;
+		margin-bottom: 8px;
+		opacity: 0.4;
+	}
+
+	/* ---------- Footer ---------- */
+	.wg-footer {
+		display: grid;
+		grid-template-columns: 1fr 1fr 1fr;
+		gap: 12px;
+		margin-top: 16px;
+		padding-top: 16px;
+		border-top: 1px solid #e8e8e8;
+	}
+	.wg-footer-card {
+		background: #fff;
+		border: 1px solid #e0e0e0;
+		border-radius: 10px;
+		padding: 14px;
+	}
+	.wg-footer-card h4 {
+		margin: 0 0 10px 0;
+		font-size: 13px;
+		font-weight: 700;
+		color: #333;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+	.wg-footer-stat-row {
+		display: flex;
+		justify-content: space-between;
+		padding: 4px 0;
+		font-size: 13px;
+	}
+	.wg-footer-stat-row .label {
+		color: #666;
+	}
+	.wg-footer-stat-row .value {
+		font-weight: 600;
+		color: #0066cc;
+	}
+	.wg-footer-link {
+		display: block;
+		padding: 6px 0;
+		color: #0066cc;
+		text-decoration: none;
+		font-size: 13px;
+		transition: color 0.15s;
+	}
+	.wg-footer-link:hover {
+		color: #0052a3;
+		text-decoration: underline;
+	}
+	.wg-legend-item {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 4px 0;
+		font-size: 12px;
+		color: #555;
+	}
+	.wg-legend-dot {
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		flex-shrink: 0;
+	}
+
+	/* ---------- Cluster styles ---------- */
+	.marker-cluster {
+		background-clip: padding-box;
+		border-radius: 50%;
+		font-weight: 900 !important;
+	}
+	.marker-cluster div {
+		font-weight: 900 !important;
+		color: #fff !important;
+		text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+	}
+
+	/* ---------- Responsive ---------- */
+	@media (max-width: 768px) {
+		.wg-page { padding: 10px; }
+		.wg-title { font-size: 18px; }
+		.wg-filter-bar { padding: 6px; gap: 6px; }
+		.wg-search-wrap { flex: 1 1 100%; }
+		.wg-select { flex: 1 1 calc(50% - 4px); min-width: 0; }
+		.wg-reset-btn { flex: 1 1 100%; }
+		.wg-map-wrap { height: 360px; }
+		.wg-results-grid { grid-template-columns: 1fr; }
+		.wg-footer { grid-template-columns: 1fr; }
+	}
+</style>
+
+<div class="wg-page">
+
+	<!-- Header -->
+	<div class="wg-header">
+		<h1 class="wg-title">
+			<span class="wg-title-icon"></span>
+			Nearby Members
+			<span class="wg-count-badge" id="wg-count-badge">0</span>
+		</h1>
+		<a href="/directory" class="wg-footer-link" style="font-size:13px;">← All Members</a>
+	</div>
+
+	<!-- Compact Filter Bar -->
+	<div class="wg-filter-bar">
+		<div class="wg-search-wrap">
+			<input type="text" id="wg-search" class="wg-search-input" placeholder="Search username..." autocomplete="off"/>
+		</div>
+		<select id="wg-radius" class="wg-select">
+			<option value="5">Within 5 mi</option>
+			<option value="10">Within 10 mi</option>
+			<option value="25" selected>Within 25 mi</option>
+			<option value="50">Within 50 mi</option>
+			<option value="100">Within 100 mi</option>
+			<option value="250">Within 250 mi</option>
+			<option value="500">Within 500 mi</option>
+			<option value="9999">Anywhere</option>
+		</select>
+		<select id="wg-role" class="wg-select">
+			<option value="">All roles</option>
+			<option value="administrator">Admins</option>
+			<option value="moderator">Mods</option>
+			<option value="user">Members</option>
+		</select>
+		<select id="wg-group" class="wg-select">
+			<option value="">All groups</option>
+		</select>
+		<button id="wg-reset" class="wg-reset-btn">Reset</button>
+	</div>
+
+	<!-- Map -->
+	<div class="wg-map-wrap">
+		<div id="wg-map"></div>
+		<button id="wg-fullscreen" class="wg-map-overlay-btn wg-fullscreen-btn" title="Toggle fullscreen">⛶</button>
+		<button id="wg-mylocation" class="wg-map-overlay-btn wg-mylocation-btn" title="Center on me">⊙</button>
+		<div class="wg-layer-switcher">
+			<button data-layer="osm" class="active">Street</button>
+			<button data-layer="sat">Satellite</button>
+			<button data-layer="light">Light</button>
+		</div>
+	</div>
+
+	<!-- Results Header -->
+	<div class="wg-results-header">
+		<h3 class="wg-results-title">Members</h3>
+		<span class="wg-results-info" id="wg-results-info">Loading...</span>
+	</div>
+
+	<!-- Results Grid -->
+	<div class="wg-results-grid" id="wg-results-grid">
+		<div class="wg-loading"><div class="wg-spinner"></div></div>
+	</div>
+
+	<!-- Infinite scroll sentinel + loader -->
+	<div id="wg-scroll-sentinel" style="height:1px;"></div>
+	<div id="wg-load-more-indicator" class="wg-loading" style="display:none;">
+		<div class="wg-spinner"></div>
+		<div style="margin-top:6px;">Loading more...</div>
+	</div>
+
+	<!-- Footer -->
+	<div class="wg-footer">
+		<div class="wg-footer-card">
+			<h4>📊 Community Stats</h4>
+			<div class="wg-footer-stat-row">
+				<span class="label">Members nearby</span>
+				<span class="value" id="wg-stat-nearby">—</span>
+			</div>
+			<div class="wg-footer-stat-row">
+				<span class="label">Within {selectedRadius} mi</span>
+				<span class="value" id="wg-stat-radius">—</span>
+			</div>
+			<div class="wg-footer-stat-row">
+				<span class="label">Groups represented</span>
+				<span class="value" id="wg-stat-groups">—</span>
+			</div>
+		</div>
+		<div class="wg-footer-card">
+			<h4>🔗 Quick Links</h4>
+			<a href="/groups" class="wg-footer-link">Browse Groups</a>
+			<a href="/users" class="wg-footer-link">All Members</a>
+			<a href="/me/edit" class="wg-footer-link">Update My Location</a>
+			<a href="/recent" class="wg-footer-link">Recent Activity</a>
+		</div>
+		<div class="wg-footer-card">
+			<h4>🗺️ Map Legend</h4>
+			<div class="wg-legend-item">
+				<span class="wg-legend-dot" style="background:#0066cc;border:2px solid #000;"></span>
+				Your location
+			</div>
+			<div class="wg-legend-item">
+				<span class="wg-legend-dot" style="background:#dc143c;"></span>
+				User (exact location)
+			</div>
+			<div class="wg-legend-item">
+				<span class="wg-legend-dot" style="background:#ff4500;"></span>
+				User (approximate)
+			</div>
+			<div class="wg-legend-item" style="margin-top:6px;font-size:11px;color:#888;">
+				Tip: Click a card to center the map.
+			</div>
+		</div>
+	</div>
+
 </div>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.1/MarkerCluster.min.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.1/MarkerCluster.Default.min.css" />
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.1/leaflet.markercluster.min.js"></script>
-
 <script>
-(function() {
-  var map;
-  var markerClusterGroup;
-  var markerMap = {};
-  var allData = {};
-  var displayedUsers = [];
-  var callerLocation = null;
-  var currentLayerGroup = null;
-  var handlersAttached = false;
+(function () {
+	'use strict';
 
-  var searchInput = document.getElementById('waymker-search');
-  var statusEl = document.getElementById('waymker-nearby-status');
-  var resultsEl = document.getElementById('waymker-nearby-results');
-  var refreshBtn = document.getElementById('waymker-refresh');
-  var resetBtn = document.getElementById('waymker-reset');
-  var radiusInput = document.getElementById('waymker-radius');
-  var limitInput = document.getElementById('waymker-limit');
-  var minRepInput = document.getElementById('waymker-minrep');
-  var roleSelect = document.getElementById('waymker-role');
-  var groupSelect = document.getElementById('waymker-group');
-  var fullscreenBtn = document.getElementById('waymker-fullscreen');
-  var centerBtn = document.getElementById('waymker-center');
-  var layerSelect = document.getElementById('waymker-layer');
+	// ============================================================
+	// STATE
+	// ============================================================
+	var state = {
+		allUsers: [],          // full response from API
+		filteredUsers: [],     // after client filters (search)
+		visibleCount: 0,       // how many cards rendered
+		pageSize: 20,
+		isPrivileged: false,
+		callerLocation: null,
+		groupsList: [],
+		map: null,
+		baseLayers: {},
+		currentLayer: 'osm',
+		markerCluster: null,
+		markerMap: {},         // uid -> marker
+		callerMarker: null,
+		searchDebounceTimer: null,
+		openMenuUid: null,
+		followingSet: {},      // uid -> true (best-effort cache)
+	};
 
-  // Attach event delegation handlers ONCE on init
-  function attachDelegationHandlers() {
-    if (handlersAttached) return;
+	// ============================================================
+	// UTILS
+	// ============================================================
+	function $(id) { return document.getElementById(id); }
+	function escapeHtml(s) {
+		if (s === null || s === undefined) return '';
+		return String(s).replace(/[&<>"']/g, function (c) {
+			return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+		});
+	}
+	function getCSRF() {
+		return (typeof config !== 'undefined' && config.csrf_token) ? config.csrf_token : '';
+	}
+	function debounce(fn, ms) {
+		return function () {
+			var args = arguments, ctx = this;
+			clearTimeout(state.searchDebounceTimer);
+			state.searchDebounceTimer = setTimeout(function () { fn.apply(ctx, args); }, ms);
+		};
+	}
 
-    resultsEl.addEventListener('click', function(e) {
-      var card = e.target.closest('.waymker-user-card');
-      if (!card) return;
+	// ============================================================
+	// API
+	// ============================================================
+	function fetchUsersNearMe() {
+		var radius = $('wg-radius').value || '25';
+		var role = $('wg-role').value || '';
+		var group = $('wg-group').value || '';
 
-      var usernameLink = card.querySelector('.waymker-card-username');
-      
-      // If clicking the username link directly, allow navigation
-      if (usernameLink && (e.target === usernameLink || usernameLink.contains(e.target))) {
-        return;
-      }
+		var params = ['radius=' + encodeURIComponent(radius), 'limit=500'];
+		if (role) params.push('roles=' + encodeURIComponent(role));
+		if (group) params.push('group=' + encodeURIComponent(group));
 
-      // Card click = show map marker
-      e.preventDefault();
-      e.stopPropagation();
-      
-      var uid = parseInt(card.getAttribute('data-uid'));
-      var marker = markerMap[uid];
-      console.log('[waymker-geo] Card clicked: uid=' + uid + ', marker exists=' + (marker !== undefined));
-      if (marker) {
-        marker.openPopup();
-        map.setView(marker.getLatLng(), 15);
-      }
-    });
+		var url = '/api/v3/plugins/waymker-geo/users-near-me?' + params.join('&');
 
-    resultsEl.addEventListener('mouseenter', function(e) {
-      var card = e.target.closest('.waymker-user-card');
-      if (!card) return;
-      var uid = parseInt(card.getAttribute('data-uid'));
-      var marker = markerMap[uid];
-      if (marker) {
-        marker.openTooltip();
-      }
-    }, true);
+		$('wg-results-info').textContent = 'Loading...';
+		$('wg-results-grid').innerHTML = '<div class="wg-loading"><div class="wg-spinner"></div></div>';
 
-    resultsEl.addEventListener('mouseleave', function(e) {
-      var card = e.target.closest('.waymker-user-card');
-      if (!card) return;
-      var uid = parseInt(card.getAttribute('data-uid'));
-      var marker = markerMap[uid];
-      if (marker) {
-        marker.closeTooltip();
-      }
-    }, true);
+		return fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+			.then(function (r) { return r.json(); })
+			.then(function (data) {
+				var payload = (data && data.response) ? data.response : data;
+				state.allUsers = (payload && payload.users) ? payload.users : [];
+				state.isPrivileged = !!(payload && payload.isPrivileged);
+				state.callerLocation = (payload && payload.callerLocation) ? payload.callerLocation : null;
+				applyClientFilters();
+				renderMarkers();
+				updateFooterStats();
+			})
+			.catch(function (err) {
+				console.error('[waymker-geo] fetch failed', err);
+				$('wg-results-grid').innerHTML = '<div class="wg-empty"><div class="wg-empty-icon">⚠️</div>Could not load nearby members. Try again.</div>';
+				$('wg-results-info').textContent = '';
+			});
+	}
 
-    handlersAttached = true;
-  }
+	function fetchGroupsList() {
+		return fetch('/api/groups', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+			.then(function (r) { return r.json(); })
+			.then(function (data) {
+				var groups = (data && data.groups) ? data.groups : [];
+				state.groupsList = groups.filter(function (g) {
+					return g && g.name && !g.system && !g.hidden && g.name !== 'registered-users';
+				});
+				populateGroupDropdown();
+			})
+			.catch(function () { /* non-fatal */ });
+	}
 
-  function initMap() {
-    map = L.map('waymker-map').setView([30.27, -97.74], 11);
-    markerClusterGroup = L.markerClusterGroup({
-      maxClusterRadius: 80,
-      disableClusteringAtZoom: 15
-    });
-    
-    setupLayers();
-    map.addLayer(markerClusterGroup);
-  }
+	function populateGroupDropdown() {
+		var sel = $('wg-group');
+		if (!sel) return;
+		var current = sel.value;
+		sel.innerHTML = '<option value="">All groups</option>';
+		state.groupsList.forEach(function (g) {
+			var opt = document.createElement('option');
+			opt.value = g.name;
+			opt.textContent = g.displayName || g.name;
+			sel.appendChild(opt);
+		});
+		if (current) sel.value = current;
+	}
 
-  function setupLayers() {
-    var osmUrl = 'https://' + '\x7bs\x7d' + '.tile.openstreetmap.org/' + '\x7bz\x7d' + '/' + '\x7bx\x7d' + '/' + '\x7by\x7d' + '.png';
-    var satelliteUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + '\x7bz\x7d' + '/' + '\x7by\x7d' + '/' + '\x7bx\x7d';
-    var lightUrl = 'https://' + '\x7bs\x7d' + '.basemaps.cartocdn.com/light_all/' + '\x7bz\x7d' + '/' + '\x7bx\x7d' + '/' + '\x7by\x7d' + '.png';
+	// ============================================================
+	// CLIENT FILTERING (search input)
+	// ============================================================
+	function applyClientFilters() {
+		var q = ($('wg-search').value || '').trim().toLowerCase();
+		var users = state.allUsers.slice();
+		if (q) {
+			users = users.filter(function (u) {
+				var name = (u.username || '').toLowerCase();
+				var city = (u.city || '').toLowerCase();
+				return name.indexOf(q) !== -1 || city.indexOf(q) !== -1;
+			});
+		}
+		state.filteredUsers = users;
+		state.visibleCount = 0;
+		$('wg-results-grid').innerHTML = '';
+		renderNextBatch();
+		$('wg-count-badge').textContent = users.length;
+		$('wg-results-info').textContent = users.length + (users.length === 1 ? ' member found' : ' members found');
+	}
 
-    var osmLayer = L.tileLayer(osmUrl, {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19
-    });
+	// ============================================================
+	// CARD RENDERING
+	// ============================================================
+	function buildAvatarHtml(user) {
+		if (user.picture) {
+			return '<img src="' + escapeHtml(user.picture) + '" alt="' + escapeHtml(user.username) + '" onerror="this.style.display=\'none\';this.parentNode.textContent=\'' + escapeHtml((user.username || '?').charAt(0).toUpperCase()) + '\';"/>';
+		}
+		var letter = (user.username || '?').charAt(0).toUpperCase();
+		return escapeHtml(letter);
+	}
 
-    var satelliteLayer = L.tileLayer(satelliteUrl, {
-      attribution: '© Esri',
-      maxZoom: 19
-    });
+	function buildLocationLine(user) {
+		var parts = [];
+		if (user.neighborhood) parts.push(user.neighborhood);
+		if (user.city) parts.push(user.city);
+		if (user.state) parts.push(user.state);
+		return parts.length ? parts.join(', ') : 'Location unknown';
+	}
 
-    var lightLayer = L.tileLayer(lightUrl, {
-      attribution: '© CartoDB',
-      maxZoom: 19
-    });
+	function buildRolesHtml(user) {
+		if (!user.roles || !user.roles.length) return '';
+		var html = '<div class="wg-roles-row">';
+		user.roles.forEach(function (r) {
+			var name = (r && (r.displayName || r.name)) || '';
+			if (!name) return;
+			var lname = name.toLowerCase();
+			var cls = 'wg-role-badge';
+			if (lname.indexOf('admin') !== -1) cls += ' admin';
+			else if (lname.indexOf('moderator') !== -1 || lname.indexOf('mod') !== -1) cls += ' mod';
+			html += '<span class="' + cls + '">' + escapeHtml(name) + '</span>';
+		});
+		html += '</div>';
+		return html;
+	}
 
-    currentLayerGroup = osmLayer;
-    osmLayer.addTo(map);
+	function buildCardHtml(user) {
+		var distanceStr = (typeof user.distance === 'number') ? user.distance.toFixed(1) + ' mi away' : '';
+		var approxBadge = user.isApproximate ? '<span class="wg-approx-badge">~ ' + escapeHtml(user.approximateLevel || 'approx') + '</span>' : '';
+		var followLabel = state.followingSet[user.uid] ? '✓ Following' : '+ Follow';
+		var followClass = state.followingSet[user.uid] ? 'wg-action-btn wg-follow-btn following' : 'wg-action-btn wg-follow-btn';
 
-    layerSelect.addEventListener('change', function(e) {
-      map.removeLayer(currentLayerGroup);
-      if (e.target.value === 'osm') {
-        currentLayerGroup = osmLayer;
-      } else if (e.target.value === 'satellite') {
-        currentLayerGroup = satelliteLayer;
-      } else if (e.target.value === 'light') {
-        currentLayerGroup = lightLayer;
-      }
-      map.addLayer(currentLayerGroup);
-    });
-  }
+		var html = '';
+		html += '<div class="wg-card" data-uid="' + user.uid + '" data-userslug="' + escapeHtml(user.userslug || '') + '">';
 
-  centerBtn.addEventListener('click', function() {
-    if (callerLocation) {
-      map.setView([callerLocation.latitude, callerLocation.longitude], 13);
-    }
-  });
+			// menu button + dropdown
+			html += '<button class="wg-menu-btn" data-menu-uid="' + user.uid + '" aria-label="Options">⋯</button>';
 
-  fullscreenBtn.addEventListener('click', function() {
-    var container = document.querySelector('.waymker-map-wrapper');
-    if (container.requestFullscreen) {
-      container.requestFullscreen();
-    }
-  });
+			// top row: avatar + info
+			html += '<div class="wg-card-top">';
+				html += '<div class="wg-avatar">' + buildAvatarHtml(user) + '</div>';
+				html += '<div class="wg-card-info">';
+					html += '<a class="wg-username-link" href="/user/' + escapeHtml(user.userslug || '') + '" data-stop="1">' + escapeHtml(user.username || 'Unknown') + '</a>';
+					html += '<div class="wg-location-line">📍 ' + escapeHtml(buildLocationLine(user)) + '</div>';
+					if (distanceStr) {
+						html += '<span class="wg-distance-pill">' + escapeHtml(distanceStr) + '</span>' + approxBadge;
+					}
+				html += '</div>';
+			html += '</div>';
 
-  function loadGroups() {
-    fetch('/api/v3/groups?truncate=true')
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        var groupsList = [];
-        if (data.response && data.response.groups && Array.isArray(data.response.groups)) {
-          groupsList = data.response.groups;
-        } else if (data.groups && Array.isArray(data.groups)) {
-          groupsList = data.groups;
-        }
-        
-        if (groupsList && groupsList.length > 0) {
-          groupSelect.innerHTML = '<option value="">-- Any Group --</option>';
-          groupsList.forEach(function(g) {
-            var name = typeof g === 'string' ? g : (g.displayName || g.name || '');
-            var slug = typeof g === 'string' ? g : (g.slug || g.name || '');
-            if (name && slug && name.toLowerCase() !== 'administrators') {
-              var opt = document.createElement('option');
-              opt.value = slug;
-              opt.textContent = name;
-              groupSelect.appendChild(opt);
-            }
-          });
-        }
-      })
-      .catch(function(e) { 
-        console.error('[waymker-geo] Error loading groups:', e);
-      });
-  }
+			// roles
+			html += buildRolesHtml(user);
 
-  function loadUsers() {
-    statusEl.textContent = 'Loading...';
-    resultsEl.innerHTML = '';
-    markerClusterGroup.clearLayers();
-    markerMap = {};
+			// stats row
+			html += '<div class="wg-stats-row">';
+				html += '<div class="wg-stat"><div class="wg-stat-num">' + (user.reputation || 0) + '</div><div class="wg-stat-label">Rep</div></div>';
+				html += '<div class="wg-stat"><div class="wg-stat-num">' + (user.postcount || 0) + '</div><div class="wg-stat-label">Posts</div></div>';
+				html += '<div class="wg-stat"><div class="wg-stat-num">' + (user.followerCount || 0) + '</div><div class="wg-stat-label">Followers</div></div>';
+			html += '</div>';
 
-    var params = [];
-    if (radiusInput.value) params.push('radius=' + encodeURIComponent(radiusInput.value));
-    if (limitInput.value) params.push('limit=' + encodeURIComponent(limitInput.value));
-    if (minRepInput.value) params.push('minReputation=' + encodeURIComponent(minRepInput.value));
-    if (roleSelect.value) params.push('roles=' + encodeURIComponent(roleSelect.value));
-    if (groupSelect.value) params.push('group=' + encodeURIComponent(groupSelect.value));
+			// actions
+			html += '<div class="wg-actions">';
+				html += '<button class="' + followClass + '" data-follow-uid="' + user.uid + '">' + followLabel + '</button>';
+				html += '<button class="wg-action-btn wg-chat-btn" data-chat-uid="' + user.uid + '" data-chat-username="' + escapeHtml(user.username || '') + '">💬 Chat</button>';
+			html += '</div>';
 
-    var url = '/api/v3/plugins/waymker-geo/users-near-me' + (params.length ? '?' + params.join('&') : '');
+		html += '</div>';
+		return html;
+	}
 
-    fetch(url)
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        console.log('[waymker-geo] API response:', data);
-        if (data.error) {
-          statusEl.innerHTML = '<div style="color: #c00;">Error: ' + data.error + '</div>';
-          return;
-        }
+	function renderNextBatch() {
+		var grid = $('wg-results-grid');
+		var users = state.filteredUsers;
 
-        allData = data;
-        if (data.callerLocation) {
-          callerLocation = data.callerLocation;
-          var callerMarker = L.circleMarker([callerLocation.latitude, callerLocation.longitude], {
-            radius: 10,
-            fillColor: '#0066cc',
-            color: '#000',
-            weight: 3,
-            opacity: 1,
-            fillOpacity: 0.95
-          }).bindPopup('<div style="font-weight:700; color:#0066cc;">📍 Your Location</div>');
-          markerClusterGroup.addLayer(callerMarker);
-          console.log('[waymker-geo] Added caller marker at', callerLocation.latitude, callerLocation.longitude);
-        }
-        
-        filterAndDisplay();
-      })
-      .catch(function(e) {
-        statusEl.innerHTML = '<div style="color: #c00;">❌ Error: ' + e.message + '</div>';
-      });
-  }
+		if (state.visibleCount === 0 && users.length === 0) {
+			grid.innerHTML = '<div class="wg-empty"><div class="wg-empty-icon">🔍</div>No members found matching your filters.<br/><small>Try widening the radius or clearing filters.</small></div>';
+			$('wg-load-more-indicator').style.display = 'none';
+			return;
+		}
 
-  function filterAndDisplay() {
-    var searchTerm = searchInput.value.toLowerCase();
-    displayedUsers = allData.users.filter(function(u) {
-      return !searchTerm || u.username.toLowerCase().indexOf(searchTerm) !== -1;
-    });
+		var end = Math.min(state.visibleCount + state.pageSize, users.length);
+		var chunk = '';
+		for (var i = state.visibleCount; i < end; i++) {
+			chunk += buildCardHtml(users[i]);
+		}
+		grid.insertAdjacentHTML('beforeend', chunk);
+		state.visibleCount = end;
 
-    // Clear old markers but keep caller marker
-    var callerMarker = null;
-    if (callerLocation) {
-      callerMarker = L.circleMarker([callerLocation.latitude, callerLocation.longitude], {
-        radius: 10,
-        fillColor: '#0066cc',
-        color: '#000',
-        weight: 3,
-        opacity: 1,
-        fillOpacity: 0.95
-      }).bindPopup('<div style="font-weight:700; color:#0066cc;">📍 Your Location</div>');
-    }
+		if (state.visibleCount >= users.length) {
+			$('wg-load-more-indicator').style.display = 'none';
+		} else {
+			$('wg-load-more-indicator').style.display = 'block';
+		}
+	}
 
-    markerClusterGroup.clearLayers();
-    markerMap = {};
+	// ============================================================
+	// MAP
+	// ============================================================
+	function initMap() {
+		state.map = L.map('wg-map', {
+			zoomControl: true,
+			attributionControl: true,
+		}).setView([39.5, -98.35], 4); // continental US default
 
-    if (callerMarker) {
-      markerClusterGroup.addLayer(callerMarker);
-    }
+		// Build tile URLs piece-by-piece; literal Leaflet placeholders would be stripped by Dust.js
+		var lb = '\x7b', rb = '\x7d';
+		var osmUrl = 'https://\x7bs\x7d.tile.openstreetmap.org/' + lb + 'z' + rb + '/' + lb + 'x' + rb + '/' + lb + 'y' + rb + '.png';
+		var satUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + lb + 'z' + rb + '/' + lb + 'y' + rb + '/' + lb + 'x' + rb;
+		var lightUrl = 'https://\x7bs\x7d.basemaps.cartocdn.com/light_all/' + lb + 'z' + rb + '/' + lb + 'x' + rb + '/' + lb + 'y' + rb + '.png';
 
-    console.log('[waymker-geo] Filtering display: ' + displayedUsers.length + ' users');
-    
-    displayedUsers.forEach(function(u) {
-      var mapLat = u.mapLatitude || u.latitude;
-      var mapLng = u.mapLongitude || u.longitude;
-      
-      console.log('[waymker-geo] Adding marker for', u.username, 'at', mapLat, mapLng);
-      
-      if (mapLat && mapLng) {
-        var color = allData.isPrivileged ? '#dc143c' : '#ff4500';
-        var marker = L.circleMarker([mapLat, mapLng], {
-          radius: 10,
-          fillColor: color,
-          color: '#000',
-          weight: 3,
-          opacity: 1,
-          fillOpacity: 0.95
-        });
+		state.baseLayers.osm = L.tileLayer(osmUrl, { maxZoom: 19, attribution: '© OpenStreetMap' });
+		state.baseLayers.sat = L.tileLayer(satUrl, { maxZoom: 19, attribution: '© Esri' });
+		state.baseLayers.light = L.tileLayer(lightUrl, { maxZoom: 19, attribution: '© CartoDB' });
 
-        var approxNote = u.isApproximate ? '<div style="color:#ff6600;font-size:11px;font-weight:600;">📍 Approximate (' + u.approximateLevel + ')</div>' : '';
-        var popupContent = '<div style="font-size:13px;">' +
-          '<div style="font-weight:700;"><a href="/user/' + u.userslug + '" style="color:#0066cc;text-decoration:none;">' + u.username + '</a></div>' +
-          '<div style="color:#666;">📍 ' + (u.neighborhood || u.city || 'Unknown') + '</div>' +
-          '<div style="color:#dc143c;font-weight:600;">' + u.distance.toFixed(1) + ' miles</div>' +
-          approxNote +
-          '</div>';
+		state.baseLayers.osm.addTo(state.map);
 
-        marker.bindPopup(popupContent);
-        marker.bindTooltip('<strong>' + u.username + '</strong><br>' + u.distance.toFixed(1) + ' mi', {
-          permanent: false,
-          direction: 'top'
-        });
+		state.markerCluster = L.markerClusterGroup({
+			iconCreateFunction: function (cluster) {
+				var n = cluster.getChildCount();
+				var size = 'small', bg = '#4caf50';
+				if (n >= 10) { size = 'medium'; bg = '#ff9800'; }
+				if (n >= 50) { size = 'large'; bg = '#f44336'; }
+				var html = '<div style="background:' + bg + ';width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:14px;border:3px solid rgba(255,255,255,0.85);box-shadow:0 2px 6px rgba(0,0,0,0.3);">' + n + '</div>';
+				return L.divIcon({ html: html, className: 'marker-cluster marker-cluster-' + size, iconSize: L.point(36, 36) });
+			},
+		});
+		state.map.addLayer(state.markerCluster);
 
-        markerClusterGroup.addLayer(marker);
-        markerMap[u.uid] = marker;
-      }
-    });
+		// Layer switcher
+		var switcher = document.querySelectorAll('.wg-layer-switcher button');
+		switcher.forEach(function (btn) {
+			btn.addEventListener('click', function () {
+				var key = btn.getAttribute('data-layer');
+				if (!state.baseLayers[key] || state.currentLayer === key) return;
+				state.map.removeLayer(state.baseLayers[state.currentLayer]);
+				state.map.addLayer(state.baseLayers[key]);
+				state.currentLayer = key;
+				switcher.forEach(function (b) { b.classList.toggle('active', b === btn); });
+			});
+		});
 
-    if (displayedUsers.length === 0) {
-      statusEl.textContent = 'No users found.';
-      resultsEl.innerHTML = '<div style="grid-column:1/-1;padding:40px 20px;text-align:center;color:#888;">No matching users found.</div>';
-      return;
-    }
+		// Fullscreen
+		$('wg-fullscreen').addEventListener('click', function () {
+			var wrap = document.querySelector('.wg-map-wrap');
+			if (!document.fullscreenElement) {
+				if (wrap.requestFullscreen) wrap.requestFullscreen();
+				else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
+			} else {
+				if (document.exitFullscreen) document.exitFullscreen();
+				else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+			}
+			setTimeout(function () { state.map.invalidateSize(); }, 250);
+		});
 
-    statusEl.textContent = '✓ Found ' + displayedUsers.length + ' user(s)';
+		// My location
+		$('wg-mylocation').addEventListener('click', function () {
+			if (state.callerLocation && state.callerLocation.latitude) {
+				state.map.flyTo([state.callerLocation.latitude, state.callerLocation.longitude], 12);
+			}
+		});
+	}
 
-    var html = '';
-    displayedUsers.forEach(function(u) {
-      var picture = u.picture || '/assets/images/default-avatar.png';
-      var locationParts = [];
-      if (u.neighborhood) locationParts.push(u.neighborhood);
-      if (u.city) locationParts.push(u.city);
-      if (u.state) locationParts.push(u.state);
-      var locationStr = locationParts.join(', ') || 'Unknown location';
+	function renderMarkers() {
+		if (!state.map || !state.markerCluster) return;
+		state.markerCluster.clearLayers();
+		state.markerMap = {};
+		if (state.callerMarker) {
+			state.map.removeLayer(state.callerMarker);
+			state.callerMarker = null;
+		}
 
-      var repStr = u.reputation !== undefined ? '<div class="waymker-card-reputation">💎 Reputation: ' + u.reputation + '</div>' : '';
-      var roleStr = '';
-      if (u.roles && u.roles.length > 0) {
-        var roleNames = u.roles.map(function(role) {
-          return typeof role === 'string' ? role : (role.displayName || role.name || role.slug || '');
-        }).filter(function(name) { return name && name.length > 0; });
-        if (roleNames.length > 0) {
-          roleStr = '<div class="waymker-card-role">👥 ' + roleNames.join(', ') + '</div>';
-        }
-      }
-      
-      var approxStr = u.isApproximate ? '<div class="waymker-card-approximate">📍 Approximate location (shown at ' + u.approximateLevel + ' level)</div>' : '';
+		// Caller marker
+		if (state.callerLocation && state.callerLocation.latitude) {
+			state.callerMarker = L.circleMarker(
+				[state.callerLocation.latitude, state.callerLocation.longitude],
+				{ radius: 10, fillColor: '#0066cc', color: '#000', weight: 3, fillOpacity: 0.9 }
+			).bindTooltip('You are here', { permanent: false }).addTo(state.map);
+		}
 
-      html += '<div class="waymker-user-card" data-uid="' + u.uid + '">' +
-        '<div class="waymker-card-header">' +
-        '<img src="' + picture + '" alt="" class="waymker-card-avatar" onerror="this.style.display=' + "'" + 'none' + "'" + '" />' +
-        '<div class="waymker-card-info">' +
-        '<a href="/user/' + u.userslug + '" class="waymker-card-username">' + u.username + '</a>' +
-        '<div class="waymker-card-location">📍 ' + locationStr + '</div>' +
-        '</div>' +
-        '</div>' +
-        '<div class="waymker-card-details">' +
-        '<div class="waymker-card-distance">📍 ' + u.distance.toFixed(1) + ' miles away</div>' +
-        roleStr +
-        repStr +
-        approxStr +
-        '</div>' +
-        '</div>';
-    });
-    resultsEl.innerHTML = html;
-  }
+		var bounds = [];
+		if (state.callerMarker) bounds.push(state.callerMarker.getLatLng());
 
-  refreshBtn.addEventListener('click', loadUsers);
-  resetBtn.addEventListener('click', function() {
-    searchInput.value = '';
-    radiusInput.value = '';
-    limitInput.value = '50';
-    minRepInput.value = '';
-    roleSelect.value = '';
-    groupSelect.value = '';
-    loadUsers();
-  });
+		state.filteredUsers.forEach(function (u) {
+			var lat = u.mapLatitude || u.latitude;
+			var lng = u.mapLongitude || u.longitude;
+			if (typeof lat !== 'number' || typeof lng !== 'number') return;
+			var fill = state.isPrivileged ? '#dc143c' : '#ff4500';
+			var marker = L.circleMarker([lat, lng], {
+				radius: 7, fillColor: fill, color: '#fff', weight: 2, fillOpacity: 0.9,
+			});
+			var popupHtml = '<div style="min-width:160px;">' +
+				'<strong><a href="/user/' + escapeHtml(u.userslug || '') + '">' + escapeHtml(u.username || '') + '</a></strong><br/>' +
+				'<span style="color:#666;font-size:12px;">' + escapeHtml(buildLocationLine(u)) + '</span><br/>' +
+				(typeof u.distance === 'number' ? '<span style="color:#0066cc;font-size:12px;font-weight:600;">' + u.distance.toFixed(1) + ' mi away</span>' : '') +
+				'</div>';
+			marker.bindPopup(popupHtml);
+			marker.bindTooltip(escapeHtml(u.username || ''));
+			state.markerCluster.addLayer(marker);
+			state.markerMap[u.uid] = marker;
+			bounds.push([lat, lng]);
+		});
 
-  searchInput.addEventListener('input', function() {
-    if (allData.users) {
-      filterAndDisplay();
-    }
-  });
+		if (bounds.length > 1) {
+			try { state.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 }); } catch (e) {}
+		} else if (state.callerMarker) {
+			state.map.setView(state.callerMarker.getLatLng(), 10);
+		}
+	}
 
-  initMap();
-  attachDelegationHandlers();
-  loadGroups();
-  loadUsers();
+	function focusMarker(uid) {
+		var marker = state.markerMap[uid];
+		if (!marker) return;
+		var latlng = marker.getLatLng();
+		// If clustered, zoom to it first
+		state.markerCluster.zoomToShowLayer(marker, function () {
+			marker.openPopup();
+			state.map.panTo(latlng);
+		});
+		// Scroll map into view if needed
+		var mapEl = document.querySelector('.wg-map-wrap');
+		if (mapEl && mapEl.getBoundingClientRect().top < 0) {
+			mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+	}
+
+	// ============================================================
+	// FOLLOW / CHAT ACTIONS
+	// ============================================================
+	function followUser(uid, btn) {
+		var alreadyFollowing = state.followingSet[uid];
+		var endpoint = '/api/v3/users/' + uid + '/follow';
+		var method = alreadyFollowing ? 'DELETE' : 'POST';
+
+		btn.disabled = true;
+		fetch(endpoint, {
+			method: method,
+			credentials: 'same-origin',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json',
+				'x-csrf-token': getCSRF(),
+			},
+		})
+			.then(function (r) {
+				btn.disabled = false;
+				if (r.ok) {
+					state.followingSet[uid] = !alreadyFollowing;
+					if (state.followingSet[uid]) {
+						btn.classList.add('following');
+						btn.textContent = '✓ Following';
+					} else {
+						btn.classList.remove('following');
+						btn.textContent = '+ Follow';
+					}
+				} else if (typeof app !== 'undefined' && app.alertError) {
+					app.alertError('Could not update follow status.');
+				}
+			})
+			.catch(function () {
+				btn.disabled = false;
+				if (typeof app !== 'undefined' && app.alertError) {
+					app.alertError('Network error.');
+				}
+			});
+	}
+
+	function startChat(username) {
+		if (typeof app !== 'undefined' && app.newChat) {
+			app.newChat(username);
+		} else {
+			window.location.href = '/chats/new/' + encodeURIComponent(username);
+		}
+	}
+
+	// ============================================================
+	// FOOTER STATS
+	// ============================================================
+	function updateFooterStats() {
+		$('wg-stat-nearby').textContent = state.allUsers.length;
+		var r = $('wg-radius').value || '25';
+		$('wg-stat-radius').textContent = state.allUsers.length;
+
+		// Replace placeholder label with current radius
+		var radiusLabel = document.querySelector('.wg-footer-card .label');
+		// We have two .label nodes; update the second one (radius)
+		var labels = document.querySelectorAll('.wg-footer-card .label');
+		if (labels.length >= 2) {
+			labels[1].textContent = 'Within ' + r + ' mi';
+		}
+
+		// Count unique groups
+		var groupSet = {};
+		state.allUsers.forEach(function (u) {
+			if (!u.roles) return;
+			u.roles.forEach(function (g) {
+				var name = (g && (g.displayName || g.name)) || '';
+				if (name) groupSet[name] = true;
+			});
+		});
+		$('wg-stat-groups').textContent = Object.keys(groupSet).length;
+	}
+
+	// ============================================================
+	// EVENT DELEGATION
+	// ============================================================
+	function attachGridDelegation() {
+		var grid = $('wg-results-grid');
+		grid.addEventListener('click', function (e) {
+			var t = e.target;
+
+			// Menu button click
+			var menuBtn = t.closest && t.closest('.wg-menu-btn');
+			if (menuBtn) {
+				e.stopPropagation();
+				toggleMenu(menuBtn);
+				return;
+			}
+
+			// Follow button
+			var followBtn = t.closest && t.closest('[data-follow-uid]');
+			if (followBtn) {
+				e.stopPropagation();
+				var fuid = parseInt(followBtn.getAttribute('data-follow-uid'), 10);
+				followUser(fuid, followBtn);
+				return;
+			}
+
+			// Chat button
+			var chatBtn = t.closest && t.closest('[data-chat-uid]');
+			if (chatBtn) {
+				e.stopPropagation();
+				var uname = chatBtn.getAttribute('data-chat-username');
+				startChat(uname);
+				return;
+			}
+
+			// Username link — let default navigation happen
+			if (t.closest && t.closest('[data-stop]')) {
+				e.stopPropagation();
+				return;
+			}
+
+			// Card body click → focus marker
+			var card = t.closest && t.closest('.wg-card');
+			if (card) {
+				var uid = parseInt(card.getAttribute('data-uid'), 10);
+				if (uid) focusMarker(uid);
+			}
+		});
+
+		// Hover → tooltip on marker
+		grid.addEventListener('mouseover', function (e) {
+			var card = e.target.closest && e.target.closest('.wg-card');
+			if (!card) return;
+			var uid = parseInt(card.getAttribute('data-uid'), 10);
+			var marker = state.markerMap[uid];
+			if (marker && marker.openTooltip) marker.openTooltip();
+		});
+		grid.addEventListener('mouseout', function (e) {
+			var card = e.target.closest && e.target.closest('.wg-card');
+			if (!card) return;
+			var uid = parseInt(card.getAttribute('data-uid'), 10);
+			var marker = state.markerMap[uid];
+			if (marker && marker.closeTooltip) marker.closeTooltip();
+		});
+	}
+
+	function toggleMenu(menuBtn) {
+		var card = menuBtn.closest('.wg-card');
+		if (!card) return;
+		var uid = parseInt(card.getAttribute('data-uid'), 10);
+		var existing = card.querySelector('.wg-menu-dropdown');
+
+		// Close any open menu first
+		document.querySelectorAll('.wg-menu-dropdown').forEach(function (d) { d.remove(); });
+
+		if (existing || state.openMenuUid === uid) {
+			state.openMenuUid = null;
+			return;
+		}
+		state.openMenuUid = uid;
+
+		var userslug = card.getAttribute('data-userslug') || '';
+		var dropdown = document.createElement('div');
+		dropdown.className = 'wg-menu-dropdown';
+		dropdown.innerHTML =
+			'<button data-action="profile">View profile</button>' +
+			'<button data-action="chat">Send message</button>' +
+			'<button data-action="copy">Copy profile link</button>';
+		dropdown.addEventListener('click', function (e) {
+			var action = e.target.getAttribute('data-action');
+			if (action === 'profile') {
+				window.location.href = '/user/' + encodeURIComponent(userslug);
+			} else if (action === 'chat') {
+				var uname = '';
+				var user = state.filteredUsers.find(function (u) { return u.uid === uid; });
+				if (user) uname = user.username;
+				startChat(uname);
+			} else if (action === 'copy') {
+				var url = window.location.origin + '/user/' + userslug;
+				if (navigator.clipboard) navigator.clipboard.writeText(url);
+				if (typeof app !== 'undefined' && app.alertSuccess) app.alertSuccess('Profile link copied');
+			}
+			dropdown.remove();
+			state.openMenuUid = null;
+		});
+		card.appendChild(dropdown);
+	}
+
+	// Close menu when clicking outside
+	document.addEventListener('click', function (e) {
+		if (e.target.closest && (e.target.closest('.wg-menu-btn') || e.target.closest('.wg-menu-dropdown'))) return;
+		document.querySelectorAll('.wg-menu-dropdown').forEach(function (d) { d.remove(); });
+		state.openMenuUid = null;
+	});
+
+	// ============================================================
+	// INFINITE SCROLL
+	// ============================================================
+	function setupInfiniteScroll() {
+		var sentinel = $('wg-scroll-sentinel');
+		if (!sentinel || !('IntersectionObserver' in window)) {
+			// fallback: scroll listener
+			window.addEventListener('scroll', function () {
+				if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 400) {
+					if (state.visibleCount < state.filteredUsers.length) renderNextBatch();
+				}
+			});
+			return;
+		}
+		var observer = new IntersectionObserver(function (entries) {
+			entries.forEach(function (entry) {
+				if (entry.isIntersecting && state.visibleCount < state.filteredUsers.length) {
+					renderNextBatch();
+				}
+			});
+		}, { rootMargin: '300px' });
+		observer.observe(sentinel);
+	}
+
+	// ============================================================
+	// FILTERS — auto-apply
+	// ============================================================
+	function attachFilterHandlers() {
+		var searchInput = $('wg-search');
+		var debouncedSearch = debounce(function () {
+			applyClientFilters();
+		}, 200);
+		searchInput.addEventListener('input', debouncedSearch);
+
+		['wg-radius', 'wg-role', 'wg-group'].forEach(function (id) {
+			$(id).addEventListener('change', function () { fetchUsersNearMe(); });
+		});
+
+		$('wg-reset').addEventListener('click', function () {
+			$('wg-search').value = '';
+			$('wg-radius').value = '25';
+			$('wg-role').value = '';
+			$('wg-group').value = '';
+			fetchUsersNearMe();
+		});
+	}
+
+	// ============================================================
+	// INIT
+	// ============================================================
+	function init() {
+		initMap();
+		attachGridDelegation();
+		attachFilterHandlers();
+		setupInfiniteScroll();
+		fetchGroupsList();
+		fetchUsersNearMe();
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', init);
+	} else {
+		init();
+	}
+
 })();
 </script>
