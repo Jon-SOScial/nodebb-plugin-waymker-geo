@@ -211,6 +211,7 @@
       border-radius: 8px;
       padding: 16px;
       transition: all 0.2s ease;
+      cursor: pointer;
       user-select: none;
     }
     
@@ -218,10 +219,6 @@
       box-shadow: 0 8px 16px rgba(0,0,0,0.15);
       border-color: #dc143c;
       transform: translateY(-2px);
-    }
-
-    .waymker-user-card-clickable {
-      cursor: pointer;
     }
     
     .waymker-card-header {
@@ -246,7 +243,7 @@
     .waymker-card-username {
       font-weight: 700;
       font-size: 15px;
-      color: #333;
+      color: #0066cc;
       text-decoration: none;
       display: block;
       margin-bottom: 4px;
@@ -254,7 +251,6 @@
     }
     
     .waymker-card-username:hover {
-      color: #0066cc;
       text-decoration: underline;
     }
     
@@ -438,6 +434,7 @@
   var displayedUsers = [];
   var callerLocation = null;
   var currentLayerGroup = null;
+  var handlersAttached = false;
 
   var searchInput = document.getElementById('waymker-search');
   var statusEl = document.getElementById('waymker-nearby-status');
@@ -453,48 +450,56 @@
   var centerBtn = document.getElementById('waymker-center');
   var layerSelect = document.getElementById('waymker-layer');
 
-  // Event delegation handler - attach once
-  resultsEl.addEventListener('click', function(e) {
-    var card = e.target.closest('.waymker-user-card');
-    if (!card) return;
+  // Attach event delegation handlers ONCE on init
+  function attachDelegationHandlers() {
+    if (handlersAttached) return;
 
-    var usernameLink = card.querySelector('.waymker-card-username');
-    
-    // If clicking the username link directly, let it navigate
-    if (e.target === usernameLink || usernameLink.contains(e.target)) {
-      return;
-    }
+    resultsEl.addEventListener('click', function(e) {
+      var card = e.target.closest('.waymker-user-card');
+      if (!card) return;
 
-    // Otherwise show marker on map
-    e.stopPropagation();
-    var uid = parseInt(card.getAttribute('data-uid'));
-    var marker = markerMap[uid];
-    if (marker) {
-      marker.openPopup();
-      map.setView(marker.getLatLng(), 15);
-    }
-  });
+      var usernameLink = card.querySelector('.waymker-card-username');
+      
+      // If clicking the username link, allow navigation
+      if (e.target === usernameLink || usernameLink.contains(e.target)) {
+        return;
+      }
 
-  // Hover handlers with event delegation
-  resultsEl.addEventListener('mouseenter', function(e) {
-    var card = e.target.closest('.waymker-user-card');
-    if (!card) return;
-    var uid = parseInt(card.getAttribute('data-uid'));
-    var marker = markerMap[uid];
-    if (marker) {
-      marker.openTooltip();
-    }
-  }, true);
+      // Card click = show map marker
+      e.preventDefault();
+      e.stopPropagation();
+      
+      var uid = parseInt(card.getAttribute('data-uid'));
+      var marker = markerMap[uid];
+      console.log('[waymker-geo] Card clicked: uid=' + uid + ', marker exists=' + (marker !== undefined));
+      if (marker) {
+        marker.openPopup();
+        map.setView(marker.getLatLng(), 15);
+      }
+    });
 
-  resultsEl.addEventListener('mouseleave', function(e) {
-    var card = e.target.closest('.waymker-user-card');
-    if (!card) return;
-    var uid = parseInt(card.getAttribute('data-uid'));
-    var marker = markerMap[uid];
-    if (marker) {
-      marker.closeTooltip();
-    }
-  }, true);
+    resultsEl.addEventListener('mouseenter', function(e) {
+      var card = e.target.closest('.waymker-user-card');
+      if (!card) return;
+      var uid = parseInt(card.getAttribute('data-uid'));
+      var marker = markerMap[uid];
+      if (marker) {
+        marker.openTooltip();
+      }
+    }, true);
+
+    resultsEl.addEventListener('mouseleave', function(e) {
+      var card = e.target.closest('.waymker-user-card');
+      if (!card) return;
+      var uid = parseInt(card.getAttribute('data-uid'));
+      var marker = markerMap[uid];
+      if (marker) {
+        marker.closeTooltip();
+      }
+    }, true);
+
+    handlersAttached = true;
+  }
 
   function initMap() {
     map = L.map('waymker-map').setView([30.27, -97.74], 11);
@@ -622,6 +627,7 @@
             fillOpacity: 0.95
           }).bindPopup('<div style="font-weight:700; color:#0066cc;">📍 Your Location</div>');
           markerClusterGroup.addLayer(callerMarker);
+          console.log('[waymker-geo] Added caller marker at', callerLocation.latitude, callerLocation.longitude);
         }
         
         filterAndDisplay();
@@ -637,9 +643,10 @@
       return !searchTerm || u.username.toLowerCase().indexOf(searchTerm) !== -1;
     });
 
-    markerClusterGroup.clearLayers();
+    // Clear old markers but keep caller marker
+    var callerMarker = null;
     if (callerLocation) {
-      var callerMarker = L.circleMarker([callerLocation.latitude, callerLocation.longitude], {
+      callerMarker = L.circleMarker([callerLocation.latitude, callerLocation.longitude], {
         radius: 10,
         fillColor: '#0066cc',
         color: '#000',
@@ -647,13 +654,22 @@
         opacity: 1,
         fillOpacity: 0.95
       }).bindPopup('<div style="font-weight:700; color:#0066cc;">📍 Your Location</div>');
+    }
+
+    markerClusterGroup.clearLayers();
+    markerMap = {};
+
+    if (callerMarker) {
       markerClusterGroup.addLayer(callerMarker);
     }
 
-    console.log('[waymker-geo] Displaying', displayedUsers.length, 'users');
+    console.log('[waymker-geo] Filtering display: ' + displayedUsers.length + ' users');
+    
     displayedUsers.forEach(function(u) {
       var mapLat = u.mapLatitude || u.latitude;
       var mapLng = u.mapLongitude || u.longitude;
+      
+      console.log('[waymker-geo] Adding marker for', u.username, 'at', mapLat, mapLng);
       
       if (mapLat && mapLng) {
         var color = allData.isPrivileged ? '#dc143c' : '#ff4500';
@@ -752,6 +768,7 @@
   });
 
   initMap();
+  attachDelegationHandlers();
   loadGroups();
   loadUsers();
 })();
