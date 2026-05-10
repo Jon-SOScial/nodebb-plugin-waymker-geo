@@ -101,7 +101,6 @@
 
     if (feature.context) {
       feature.context.forEach(function(ctx) {
-        console.log('[waymker-geo] Context item:', ctx.id, ctx.text);
         if (ctx.id.indexOf('neighborhood') !== -1) neighborhood = ctx.text;
         if (ctx.id.indexOf('postcode') !== -1) zipCode = ctx.text;
         if (ctx.id.indexOf('place') !== -1) city = ctx.text;
@@ -116,21 +115,11 @@
     var stateField = document.querySelector('input[name="waymkerGeo:state"]');
     var countryField = document.querySelector('input[name="waymkerGeo:country"]');
 
-    console.log('[waymker-geo] Found fields:', {
-      neighborhoodField: !!neighborhoodField,
-      zipField: !!zipField,
-      cityField: !!cityField,
-      stateField: !!stateField,
-      countryField: !!countryField
-    });
-
     if (neighborhoodField) neighborhoodField.value = neighborhood;
     if (zipField) zipField.value = zipCode;
     if (cityField) cityField.value = city;
     if (stateField) stateField.value = state;
     if (countryField) countryField.value = country;
-
-    console.log('[waymker-geo] Fields filled');
   }
 
   document.addEventListener('click', function(e) {
