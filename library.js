@@ -41,6 +41,7 @@ plugin.addAdminNavigation = (header) => {
 
 plugin.whitelistUserFields = (fields) => {
 	fields.push('waymkerGeo:address');
+	fields.push('waymkerGeo:neighborhood');
 	fields.push('waymkerGeo:zipCode');
 	fields.push('waymkerGeo:city');
 	fields.push('waymkerGeo:state');
