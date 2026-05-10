@@ -30,7 +30,7 @@
         <input type="number" id="waymker-minrep" placeholder="Any reputation" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px;" />
       </div>
 
-      <!-- Role Type (Single Select) -->
+      <!-- Role Type -->
       <div>
         <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #333;">Role</label>
         <select id="waymker-role" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px;">
@@ -91,47 +91,42 @@
   var allData = {};
   var displayedUsers = [];
 
-  // Load groups on init
   function loadGroups() {
     fetch('/api/v3/groups?truncate=true')
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        console.log('[waymker-geo] Groups API response:', data);
-        
+        console.log('[waymker-geo] Groups response:', data);
         var groupsList = [];
-        
-        // Handle different response formats
-        if (data.groups && Array.isArray(data.groups)) {
+        if (data.response && data.response.groups && Array.isArray(data.response.groups)) {
+          groupsList = data.response.groups;
+        } else if (data.response && Array.isArray(data.response)) {
+          groupsList = data.response;
+        } else if (data.groups && Array.isArray(data.groups)) {
           groupsList = data.groups;
         } else if (Array.isArray(data)) {
           groupsList = data;
-        } else if (data.payload && Array.isArray(data.payload)) {
-          groupsList = data.payload;
         }
         
-        console.log('[waymker-geo] Parsed groups:', groupsList);
-        
-        if (groupsList.length > 0) {
+        if (groupsList && groupsList.length > 0) {
           groupSelect.innerHTML = '<option value="">-- Any Group --</option>';
           groupsList.forEach(function(g) {
-            // Handle group being string or object
-            var name = typeof g === 'string' ? g : (g.displayName || g.name || g.slug || '');
+            var name = typeof g === 'string' ? g : (g.displayName || g.name || '');
             var slug = typeof g === 'string' ? g : (g.slug || g.name || '');
-            if (name && slug) {
+            if (name && slug && name.toLowerCase() !== 'administrators') {
               var opt = document.createElement('option');
               opt.value = slug;
               opt.textContent = name;
               groupSelect.appendChild(opt);
             }
           });
-          console.log('[waymker-geo] Groups populated:', groupSelect.options.length - 1);
+          console.log('[waymker-geo] Groups loaded: ' + (groupSelect.options.length - 1));
         } else {
           groupSelect.innerHTML = '<option value="">-- No Groups Found --</option>';
         }
       })
       .catch(function(e) { 
         console.error('[waymker-geo] Error loading groups:', e);
-        groupSelect.innerHTML = '<option value="">-- Error Loading Groups --</option>';
+        groupSelect.innerHTML = '<option value="">-- Error Loading --</option>';
       });
   }
 
@@ -156,29 +151,27 @@
           statusEl.innerHTML = '<div style="color: #c00;">' + data.error + '</div>';
           return;
         }
-
         allData = data;
         filterAndDisplay();
       })
       .catch(function(e) {
-        statusEl.innerHTML = '<div style="color: #c00;">Error loading users: ' + e.message + '</div>';
+        statusEl.innerHTML = '<div style="color: #c00;">Error: ' + e.message + '</div>';
       });
   }
 
   function filterAndDisplay() {
     var searchTerm = searchInput.value.toLowerCase();
-    
     displayedUsers = allData.users.filter(function(u) {
       return !searchTerm || u.username.toLowerCase().indexOf(searchTerm) !== -1;
     });
 
     if (displayedUsers.length === 0) {
-      statusEl.textContent = 'No users found matching your criteria.';
-      resultsEl.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 20px; text-align: center; color: #888;">No matching users found. Try adjusting your filters.</div>';
+      statusEl.textContent = 'No users found.';
+      resultsEl.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 20px; text-align: center; color: #888;">No matching users found.</div>';
       return;
     }
 
-    statusEl.textContent = 'Found ' + displayedUsers.length + ' user' + (displayedUsers.length === 1 ? '' : 's') + ' near you' + (allData.isPrivileged ? ' (showing exact details)' : ' (neighborhood-level)');
+    statusEl.textContent = 'Found ' + displayedUsers.length + ' user' + (displayedUsers.length === 1 ? '' : 's');
 
     var html = '';
     displayedUsers.forEach(function(u) {
@@ -194,42 +187,34 @@
         coordsStr = '<div style="font-size: 12px; color: #999; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f0f0f0;">' + u.latitude.toFixed(4) + ', ' + u.longitude.toFixed(4) + '</div>';
       }
 
-      var repStr = u.reputation !== undefined ? '<div style="font-size: 13px; color: #666; margin-top: 4px;">💎 Reputation: <strong>' + u.reputation + '</strong></div>' : '';
-      
-      // Fix roles display - handle both strings and objects
+      var repStr = u.reputation !== undefined ? '<div style="font-size: 13px; color: #666; margin-top: 4px;">💎 ' + u.reputation + '</div>' : '';
       var roleStr = '';
       if (u.roles && u.roles.length > 0) {
         var roleNames = u.roles.map(function(role) {
           return typeof role === 'string' ? role : (role.displayName || role.name || role.slug || '');
-        }).filter(function(name) {
-          return name && name.length > 0;
-        });
+        }).filter(function(name) { return name && name.length > 0; });
         if (roleNames.length > 0) {
-          roleStr = '<div style="font-size: 12px; color: #0066cc; margin-top: 6px; font-weight: 500;">👥 ' + roleNames.join(', ') + '</div>';
+          roleStr = '<div style="font-size: 12px; color: #0066cc; margin-top: 6px;">👥 ' + roleNames.join(', ') + '</div>';
         }
       }
 
-      html += '<div style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; display: flex; flex-direction: column;">';
-      html += '<div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px;">';
-      html += '<img src="' + picture + '" alt="" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" onerror="this.style.display=\'none\'" />';
-      html += '<div style="flex: 1; min-width: 0;">';
-      html += '<div style="font-weight: 700; font-size: 15px;"><a href="/user/' + u.userslug + '" style="color: inherit; text-decoration: none; cursor: pointer;">' + u.username + '</a></div>';
-      html += '<div style="color: #666; font-size: 13px; margin-top: 4px;">📍 ' + locationStr + '</div>';
+      html += '<div style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px;">';
+      html += '<div style="display: flex; gap: 12px; margin-bottom: 12px;">';
+      html += '<img src="' + picture + '" alt="" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;" onerror="this.style.display=\'none\'" />';
+      html += '<div style="flex: 1;">';
+      html += '<div style="font-weight: 700;"><a href="/user/' + u.userslug + '" style="color: inherit; text-decoration: none;">' + u.username + '</a></div>';
+      html += '<div style="color: #666; font-size: 13px;">📍 ' + locationStr + '</div>';
       html += '</div>';
       html += '</div>';
-      html += '<div style="flex: 1;"></div>';
-      html += repStr;
-      html += roleStr;
-      html += coordsStr;
+      html += repStr + roleStr + coordsStr;
       html += '<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f5f5f5; text-align: right;">';
-      html += '<div style="font-weight: 700; color: #0066cc; font-size: 18px;">' + u.distance.toFixed(1) + ' <span style="font-size: 12px; color: #999;">mi</span></div>';
+      html += '<div style="font-weight: 700; color: #0066cc;">' + u.distance.toFixed(1) + ' mi</div>';
       html += '</div>';
       html += '</div>';
     });
     resultsEl.innerHTML = html;
   }
 
-  // Event listeners
   refreshBtn.addEventListener('click', loadUsers);
   resetBtn.addEventListener('click', function() {
     searchInput.value = '';
