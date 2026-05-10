@@ -21,35 +21,36 @@
       height: 100%;
     }
 
-    /* Bold cluster numbers */
+    /* Improved cluster styling */
     .marker-cluster {
       background-clip: padding-box;
       border-radius: 40px;
-      border: 3px solid rgba(0,0,0,0.3);
+      border: 3px solid rgba(0,0,0,0.4);
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .marker-cluster span {
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 900;
       color: white;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
       font-family: 'Arial Black', sans-serif;
+      line-height: 1;
     }
 
     .marker-cluster.marker-cluster-small {
-      background-color: rgba(181, 226, 140, 0.9);
-      border-color: rgba(110, 204, 57, 0.8);
+      background-color: rgba(100, 200, 80, 0.95);
     }
 
     .marker-cluster.marker-cluster-medium {
-      background-color: rgba(241, 211, 87, 0.9);
-      border-color: rgba(240, 194, 12, 0.8);
+      background-color: rgba(255, 180, 50, 0.95);
     }
 
     .marker-cluster.marker-cluster-large {
-      background-color: rgba(253, 156, 115, 0.9);
-      border-color: rgba(241, 128, 23, 0.8);
+      background-color: rgba(255, 100, 50, 0.95);
     }
     
     .waymker-map-controls {
@@ -224,7 +225,6 @@
       display: flex;
       gap: 12px;
       margin-bottom: 12px;
-      pointer-events: none;
     }
     
     .waymker-card-avatar {
@@ -247,7 +247,6 @@
       text-decoration: none;
       display: block;
       margin-bottom: 4px;
-      pointer-events: auto;
     }
     
     .waymker-card-username:hover {
@@ -609,8 +608,6 @@
       var mapLat = u.mapLatitude || u.latitude;
       var mapLng = u.mapLongitude || u.longitude;
       
-      console.log('[waymker-geo] User:', u.username, 'mapLat:', mapLat, 'mapLng:', mapLng);
-      
       if (mapLat && mapLng) {
         var color = allData.isPrivileged ? '#dc143c' : '#ff4500';
         var marker = L.circleMarker([mapLat, mapLng], {
@@ -631,11 +628,10 @@
           '</div>';
 
         marker.bindPopup(popupContent);
-        marker.on('click', function() {
-          var userCard = document.querySelector('[data-uid="' + u.uid + '"]');
-          if (userCard) {
-            userCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          }
+        marker.bindTooltip('<strong>' + u.username + '</strong><br>' + u.distance.toFixed(1) + ' mi', {
+          permanent: false,
+          direction: 'top',
+          className: 'waymker-tooltip'
         });
 
         markerClusterGroup.addLayer(marker);
@@ -673,11 +669,11 @@
       
       var approxStr = u.isApproximate ? '<div class="waymker-card-approximate">📍 Approximate location (shown at ' + u.approximateLevel + ' level)</div>' : '';
 
-      html += '<div class="waymker-user-card" data-uid="' + u.uid + '">' +
+      html += '<div class="waymker-user-card" data-uid="' + u.uid + '" data-username="' + u.username + '">' +
         '<div class="waymker-card-header">' +
         '<img src="' + picture + '" alt="" class="waymker-card-avatar" onerror="this.style.display=' + "'" + 'none' + "'" + '" />' +
         '<div class="waymker-card-info">' +
-        '<a href="/user/' + u.userslug + '" class="waymker-card-username">' + u.username + '</a>' +
+        '<a href="/user/' + u.userslug + '" class="waymker-card-username" data-username-link="true">' + u.username + '</a>' +
         '<div class="waymker-card-location">📍 ' + locationStr + '</div>' +
         '</div>' +
         '</div>' +
@@ -691,18 +687,41 @@
     });
     resultsEl.innerHTML = html;
 
-    // Add click handlers to cards (excluding the username link)
+    // Add click handlers to cards with proper event delegation
     document.querySelectorAll('.waymker-user-card').forEach(function(card) {
+      var usernameLink = card.querySelector('.waymker-card-username');
+      var uid = parseInt(card.getAttribute('data-uid'));
+      var username = card.getAttribute('data-username');
+      
       card.addEventListener('click', function(e) {
-        if (e.target.closest('.waymker-card-username')) {
-          return; // Allow username link to work
+        // If clicking the username link, let it proceed normally
+        if (e.target === usernameLink || usernameLink.contains(e.target)) {
+          return;
         }
-        var uid = parseInt(card.getAttribute('data-uid'));
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Click on card should show marker
         var marker = markerMap[uid];
         if (marker) {
-          // Open popup and center on marker
           marker.openPopup();
           map.setView(marker.getLatLng(), 15);
+        }
+      }, true);
+
+      // Hover to show tooltip (optional enhancement)
+      card.addEventListener('mouseenter', function() {
+        var marker = markerMap[uid];
+        if (marker) {
+          marker.openTooltip();
+        }
+      });
+      
+      card.addEventListener('mouseleave', function() {
+        var marker = markerMap[uid];
+        if (marker) {
+          marker.closeTooltip();
         }
       });
     });
