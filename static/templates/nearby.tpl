@@ -423,11 +423,12 @@
     map.addLayer(markerClusterGroup);
   }
 
-  // Setup different tile layers
+  // Setup different tile layers with correct URL templates
   function setupLayers() {
     var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
-      maxZoom: 19
+      maxZoom: 19,
+      subdomains: 'abc'
     });
 
     var satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -437,7 +438,8 @@
 
     var lightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '© CartoDB',
-      maxZoom: 19
+      maxZoom: 19,
+      subdomains: 'abc'
     });
 
     currentLayerGroup = osmLayer;
@@ -579,7 +581,6 @@
           var userCard = document.querySelector('[data-uid="' + u.uid + '"]');
           if (userCard) {
             userCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            userCard.style.highlight = 'yellow';
           }
         });
 
