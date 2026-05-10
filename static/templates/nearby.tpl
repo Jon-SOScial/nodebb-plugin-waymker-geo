@@ -52,8 +52,7 @@
       background: white;
       padding: 20px;
       border-bottom: 2px solid #e0e0e0;
-      max-height: 200px;
-      overflow-y: auto;
+      overflow: visible;
     }
     
     .waymker-filters-content {
@@ -145,7 +144,7 @@
       background: white;
       padding: 20px;
       overflow-y: auto;
-      max-height: 35vh;
+      max-height: 40vh;
     }
     
     .waymker-results-content {
@@ -220,7 +219,7 @@
     .waymker-card-details {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
       padding-top: 12px;
       border-top: 1px solid #f0f0f0;
       font-size: 13px;
@@ -235,6 +234,17 @@
     .waymker-card-role {
       color: #0066cc;
       font-size: 12px;
+      font-weight: 600;
+      display: inline-block;
+      background: #e6f0ff;
+      padding: 4px 8px;
+      border-radius: 4px;
+      width: fit-content;
+    }
+    
+    .waymker-card-reputation {
+      color: #666;
+      font-size: 13px;
     }
     
     .waymker-search-bar {
@@ -396,7 +406,6 @@
   }
 
   function setupLayers() {
-    // Using \x7b for { and \x7d for } to bypass Dust.js template engine
     var osmUrl = 'https://' + '\x7bs\x7d' + '.tile.openstreetmap.org/' + '\x7bz\x7d' + '/' + '\x7bx\x7d' + '/' + '\x7by\x7d' + '.png';
     var satelliteUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + '\x7bz\x7d' + '/' + '\x7by\x7d' + '/' + '\x7bx\x7d';
     var lightUrl = 'https://' + '\x7bs\x7d' + '.basemaps.cartocdn.com/light_all/' + '\x7bz\x7d' + '/' + '\x7bx\x7d' + '/' + '\x7by\x7d' + '.png';
@@ -586,14 +595,14 @@
       if (u.state) locationParts.push(u.state);
       var locationStr = locationParts.join(', ') || 'Unknown location';
 
-      var repStr = u.reputation !== undefined ? '<div style="margin-top:6px;">💎 Reputation: ' + u.reputation + '</div>' : '';
+      var repStr = u.reputation !== undefined ? '<div class="waymker-card-reputation">💎 Reputation: ' + u.reputation + '</div>' : '';
       var roleStr = '';
       if (u.roles && u.roles.length > 0) {
         var roleNames = u.roles.map(function(role) {
           return typeof role === 'string' ? role : (role.displayName || role.name || role.slug || '');
         }).filter(function(name) { return name && name.length > 0; });
         if (roleNames.length > 0) {
-          roleStr = '<div style="color:#0066cc;font-size:12px;">👥 ' + roleNames.join(', ') + '</div>';
+          roleStr = '<div class="waymker-card-role">👥 ' + roleNames.join(', ') + '</div>';
         }
       }
 
@@ -607,8 +616,8 @@
         '</div>' +
         '<div class="waymker-card-details">' +
         '<div class="waymker-card-distance">📍 ' + u.distance.toFixed(1) + ' miles</div>' +
-        repStr +
         roleStr +
+        repStr +
         '</div>' +
         '</div>';
     });
