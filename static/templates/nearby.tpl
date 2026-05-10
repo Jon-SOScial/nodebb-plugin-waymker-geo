@@ -1,38 +1,40 @@
-<div class="waymker-nearby-page" style="max-width: 1000px; margin: 20px auto; padding: 0 15px;">
-  <h1 style="margin-bottom: 25px;"><i class="fa fa-map-marker-alt"></i> Users Near Me</h1>
+<div class="waymker-nearby-page" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+  <h1 style="margin-bottom: 30px; font-size: 32px;"><i class="fa fa-map-marker-alt"></i> Users Near Me</h1>
 
   <!-- Search Bar -->
-  <div style="margin-bottom: 20px;">
-    <input type="text" id="waymker-search" placeholder="Search by username..." style="width: 100%; padding: 12px; font-size: 14px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;" />
+  <div style="margin-bottom: 25px;">
+    <input type="text" id="waymker-search" placeholder="Search by username..." style="width: 100%; padding: 14px 16px; font-size: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,0.05);" />
   </div>
 
-  <!-- Filter Controls -->
-  <div id="waymker-filters" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+  <!-- Filter Section -->
+  <div style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 24px; margin-bottom: 25px;">
+    <h3 style="margin: 0 0 20px 0; font-size: 16px; font-weight: 700;">Filters</h3>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 20px;">
       
       <!-- Radius -->
       <div>
-        <label style="display: block; font-weight: 600; margin-bottom: 5px;">Radius (miles)</label>
-        <input type="number" id="waymker-radius" placeholder="Any" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" />
+        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #333;">Radius (miles)</label>
+        <input type="number" id="waymker-radius" placeholder="Any distance" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px;" />
       </div>
 
       <!-- Limit -->
       <div>
-        <label style="display: block; font-weight: 600; margin-bottom: 5px;">Limit Results</label>
-        <input type="number" id="waymker-limit" value="50" min="1" max="200" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" />
+        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #333;">Results Limit</label>
+        <input type="number" id="waymker-limit" value="50" min="1" max="200" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px;" />
       </div>
 
       <!-- Min Reputation -->
       <div>
-        <label style="display: block; font-weight: 600; margin-bottom: 5px;">Min Reputation</label>
-        <input type="number" id="waymker-minrep" placeholder="Any" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" />
+        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #333;">Min Reputation</label>
+        <input type="number" id="waymker-minrep" placeholder="Any reputation" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px;" />
       </div>
 
-      <!-- Role Type -->
+      <!-- Role Type (Single Select) -->
       <div>
-        <label style="display: block; font-weight: 600; margin-bottom: 5px;">Role Type</label>
-        <select id="waymker-role" multiple style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-          <option value="">-- All Roles --</option>
+        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #333;">Role</label>
+        <select id="waymker-role" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px;">
+          <option value="">-- Any Role --</option>
           <option value="administrator">Administrator</option>
           <option value="moderator">Moderator</option>
           <option value="user">Regular User</option>
@@ -41,16 +43,17 @@
 
       <!-- Group Filter -->
       <div>
-        <label style="display: block; font-weight: 600; margin-bottom: 5px;">Group</label>
-        <select id="waymker-group" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-          <option value="">-- All Groups --</option>
+        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #333;">Group</label>
+        <select id="waymker-group" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px;">
+          <option value="">-- Any Group --</option>
+          <option value="loading">Loading groups...</option>
         </select>
       </div>
 
       <!-- Friends Filter -->
       <div>
-        <label style="display: block; font-weight: 600; margin-bottom: 5px;">Friends</label>
-        <select id="waymker-friends" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #333;">Friends</label>
+        <select id="waymker-friends" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px;">
           <option value="all">All Users</option>
           <option value="friends">My Friends Only</option>
           <option value="nonfriends">Not My Friends</option>
@@ -58,15 +61,17 @@
       </div>
     </div>
 
-    <button id="waymker-refresh" class="btn btn-primary" style="margin-top: 12px; padding: 8px 20px;">Apply Filters</button>
-    <button id="waymker-reset" class="btn btn-secondary" style="margin-top: 12px; padding: 8px 20px; margin-left: 8px;">Reset</button>
+    <div style="display: flex; gap: 10px;">
+      <button id="waymker-refresh" class="btn btn-primary" style="padding: 10px 24px; font-weight: 600;">Apply Filters</button>
+      <button id="waymker-reset" class="btn btn-secondary" style="padding: 10px 24px; font-weight: 600;">Reset</button>
+    </div>
   </div>
 
   <!-- Status -->
-  <div id="waymker-nearby-status" style="margin-bottom: 15px; color: #666; font-size: 14px;"></div>
+  <div id="waymker-nearby-status" style="margin-bottom: 20px; color: #555; font-size: 14px; font-weight: 500;"></div>
 
-  <!-- Results -->
-  <div id="waymker-nearby-results"></div>
+  <!-- Results Container -->
+  <div id="waymker-nearby-results" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;"></div>
 </div>
 
 <script>
@@ -88,19 +93,26 @@
 
   // Load groups on init
   function loadGroups() {
-    fetch('/api/v3/groups')
+    fetch('/api/v3/groups?truncate=true')
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        if (data.groups) {
+        console.log('[waymker-geo] Groups loaded:', data);
+        if (data.groups && data.groups.length > 0) {
+          groupSelect.innerHTML = '<option value="">-- Any Group --</option>';
           data.groups.forEach(function(g) {
             var opt = document.createElement('option');
-            opt.value = g.slug;
+            opt.value = g.slug || g.name;
             opt.textContent = g.displayName || g.name;
             groupSelect.appendChild(opt);
           });
+        } else {
+          groupSelect.innerHTML = '<option value="">-- No Groups Found --</option>';
         }
       })
-      .catch(function(e) { console.error('Error loading groups:', e); });
+      .catch(function(e) { 
+        console.error('[waymker-geo] Error loading groups:', e);
+        groupSelect.innerHTML = '<option value="">-- Error Loading Groups --</option>';
+      });
   }
 
   function loadUsers() {
@@ -111,15 +123,7 @@
     if (radiusInput.value) params.push('radius=' + encodeURIComponent(radiusInput.value));
     if (limitInput.value) params.push('limit=' + encodeURIComponent(limitInput.value));
     if (minRepInput.value) params.push('minReputation=' + encodeURIComponent(minRepInput.value));
-    
-    var roles = [];
-    for (var i = 0; i < roleSelect.options.length; i++) {
-      if (roleSelect.options[i].selected && roleSelect.options[i].value) {
-        roles.push(roleSelect.options[i].value);
-      }
-    }
-    if (roles.length) params.push('roles=' + encodeURIComponent(roles.join(',')));
-    
+    if (roleSelect.value) params.push('roles=' + encodeURIComponent(roleSelect.value));
     if (groupSelect.value) params.push('group=' + encodeURIComponent(groupSelect.value));
     if (friendsSelect.value !== 'all') params.push('friends=' + encodeURIComponent(friendsSelect.value));
 
@@ -150,11 +154,11 @@
 
     if (displayedUsers.length === 0) {
       statusEl.textContent = 'No users found matching your criteria.';
-      resultsEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #888;">Try adjusting your filters.</div>';
+      resultsEl.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 20px; text-align: center; color: #888;">No matching users found. Try adjusting your filters.</div>';
       return;
     }
 
-    statusEl.textContent = 'Found ' + displayedUsers.length + ' user' + (displayedUsers.length === 1 ? '' : 's') + ' near you' + (allData.isPrivileged ? ' (showing exact details)' : '');
+    statusEl.textContent = 'Found ' + displayedUsers.length + ' user' + (displayedUsers.length === 1 ? '' : 's') + ' near you' + (allData.isPrivileged ? ' (showing exact details)' : ' (neighborhood-level)');
 
     var html = '';
     displayedUsers.forEach(function(u) {
@@ -167,30 +171,26 @@
 
       var coordsStr = '';
       if (allData.isPrivileged && u.latitude && u.longitude) {
-        coordsStr = '<div style="font-size: 11px; color: #999;">' + u.latitude.toFixed(4) + ', ' + u.longitude.toFixed(4) + '</div>';
+        coordsStr = '<div style="font-size: 12px; color: #999; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f0f0f0;">' + u.latitude.toFixed(4) + ', ' + u.longitude.toFixed(4) + '</div>';
       }
 
-      var repStr = '';
-      if (u.reputation !== undefined) {
-        repStr = '<div style="font-size: 12px; color: #888;">Reputation: ' + u.reputation + '</div>';
-      }
+      var repStr = u.reputation !== undefined ? '<div style="font-size: 13px; color: #666; margin-top: 4px;">💎 Reputation: <strong>' + u.reputation + '</strong></div>' : '';
+      var roleStr = u.roles && u.roles.length > 0 ? '<div style="font-size: 12px; color: #0066cc; margin-top: 6px; font-weight: 500;">' + u.roles.join(', ') + '</div>' : '';
 
-      var roleStr = '';
-      if (u.roles && u.roles.length > 0) {
-        roleStr = '<div style="font-size: 11px; color: #0066cc;">' + u.roles.join(', ') + '</div>';
-      }
-
-      html += '<div style="display: flex; align-items: flex-start; padding: 12px; border-bottom: 1px solid #eee; gap: 15px;">';
+      html += '<div style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; display: flex; flex-direction: column;">';
+      html += '<div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px;">';
       html += '<img src="' + picture + '" alt="" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" onerror="this.style.display=\'none\'" />';
       html += '<div style="flex: 1; min-width: 0;">';
-      html += '<div style="font-weight: 600;"><a href="/user/' + u.userslug + '" style="color: inherit; text-decoration: none;">' + u.username + '</a></div>';
-      html += '<div style="color: #666; font-size: 13px;">' + locationStr + '</div>';
+      html += '<div style="font-weight: 700; font-size: 15px;"><a href="/user/' + u.userslug + '" style="color: inherit; text-decoration: none; cursor: pointer;">' + u.username + '</a></div>';
+      html += '<div style="color: #666; font-size: 13px; margin-top: 4px;">📍 ' + locationStr + '</div>';
+      html += '</div>';
+      html += '</div>';
+      html += '<div style="flex: 1;"></div>';
       html += repStr;
       html += roleStr;
       html += coordsStr;
-      html += '</div>';
-      html += '<div style="text-align: right; flex-shrink: 0;">';
-      html += '<div style="font-weight: 600; color: #0066cc; font-size: 16px;">' + u.distance.toFixed(1) + ' mi</div>';
+      html += '<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f5f5f5; text-align: right;">';
+      html += '<div style="font-weight: 700; color: #0066cc; font-size: 18px;">' + u.distance.toFixed(1) + ' <span style="font-size: 12px; color: #999;">mi</span></div>';
       html += '</div>';
       html += '</div>';
     });
