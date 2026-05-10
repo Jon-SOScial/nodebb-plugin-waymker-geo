@@ -213,6 +213,7 @@
       padding: 16px;
       transition: all 0.2s ease;
       cursor: pointer;
+      user-select: none;
     }
     
     .waymker-user-card:hover {
@@ -247,6 +248,7 @@
       text-decoration: none;
       display: block;
       margin-bottom: 4px;
+      cursor: pointer;
     }
     
     .waymker-card-username:hover {
@@ -630,8 +632,7 @@
         marker.bindPopup(popupContent);
         marker.bindTooltip('<strong>' + u.username + '</strong><br>' + u.distance.toFixed(1) + ' mi', {
           permanent: false,
-          direction: 'top',
-          className: 'waymker-tooltip'
+          direction: 'top'
         });
 
         markerClusterGroup.addLayer(marker);
@@ -669,11 +670,11 @@
       
       var approxStr = u.isApproximate ? '<div class="waymker-card-approximate">📍 Approximate location (shown at ' + u.approximateLevel + ' level)</div>' : '';
 
-      html += '<div class="waymker-user-card" data-uid="' + u.uid + '" data-username="' + u.username + '">' +
+      html += '<div class="waymker-user-card" data-uid="' + u.uid + '">' +
         '<div class="waymker-card-header">' +
         '<img src="' + picture + '" alt="" class="waymker-card-avatar" onerror="this.style.display=' + "'" + 'none' + "'" + '" />' +
         '<div class="waymker-card-info">' +
-        '<a href="/user/' + u.userslug + '" class="waymker-card-username" data-username-link="true">' + u.username + '</a>' +
+        '<a href="/user/' + u.userslug + '" class="waymker-card-username" onclick="return true;">' + u.username + '</a>' +
         '<div class="waymker-card-location">📍 ' + locationStr + '</div>' +
         '</div>' +
         '</div>' +
@@ -687,44 +688,51 @@
     });
     resultsEl.innerHTML = html;
 
-    // Add click handlers to cards with proper event delegation
-    document.querySelectorAll('.waymker-user-card').forEach(function(card) {
-      var usernameLink = card.querySelector('.waymker-card-username');
-      var uid = parseInt(card.getAttribute('data-uid'));
-      var username = card.getAttribute('data-username');
-      
-      card.addEventListener('click', function(e) {
-        // If clicking the username link, let it proceed normally
-        if (e.target === usernameLink || usernameLink.contains(e.target)) {
-          return;
-        }
+    // Attach click handlers AFTER rendering
+    setTimeout(function() {
+      document.querySelectorAll('.waymker-user-card').forEach(function(card) {
+        var uid = parseInt(card.getAttribute('data-uid'));
+        var usernameLink = card.querySelector('.waymker-card-username');
         
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // Click on card should show marker
-        var marker = markerMap[uid];
-        if (marker) {
-          marker.openPopup();
-          map.setView(marker.getLatLng(), 15);
-        }
-      }, true);
+        // Card click handler - show marker on map
+        card.addEventListener('click', function(e) {
+          // If clicking the link itself, allow default behavior
+          if (e.target === usernameLink || usernameLink.contains(e.target)) {
+            return true;
+          }
+          
+          // Otherwise, show the marker
+          e.stopPropagation();
+          var marker = markerMap[uid];
+          if (marker) {
+            marker.openPopup();
+            map.setView(marker.getLatLng(), 15);
+          }
+          return false;
+        });
 
-      // Hover to show tooltip (optional enhancement)
-      card.addEventListener('mouseenter', function() {
-        var marker = markerMap[uid];
-        if (marker) {
-          marker.openTooltip();
-        }
+        // Username link click handler - go to profile
+        usernameLink.addEventListener('click', function(e) {
+          e.stopPropagation();
+          return true;
+        });
+
+        // Hover effects
+        card.addEventListener('mouseenter', function() {
+          var marker = markerMap[uid];
+          if (marker) {
+            marker.openTooltip();
+          }
+        });
+        
+        card.addEventListener('mouseleave', function() {
+          var marker = markerMap[uid];
+          if (marker) {
+            marker.closeTooltip();
+          }
+        });
       });
-      
-      card.addEventListener('mouseleave', function() {
-        var marker = markerMap[uid];
-        if (marker) {
-          marker.closeTooltip();
-        }
-      });
-    });
+    }, 0);
   }
 
   refreshBtn.addEventListener('click', loadUsers);
