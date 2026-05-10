@@ -27,7 +27,10 @@ plugin.init = async (params) => {
 	routeHelpers.setupApiRoute(router, 'get', '/api/v3/plugins/waymker-geo/geocode', [middleware.ensureLoggedIn], controllers.geocodeProxy);
 	routeHelpers.setupApiRoute(router, 'get', '/api/v3/plugins/waymker-geo/users-near-me', [middleware.ensureLoggedIn], controllers.getUsersNearMe);
 
-	console.log('[waymker-geo] Routes registered (including users-near-me)');
+	// Page route: /directory/nearby
+	routeHelpers.setupPageRoute(router, '/directory/nearby', [middleware.ensureLoggedIn], controllers.renderNearbyPage);
+
+	console.log('[waymker-geo] Routes registered (including users-near-me and /directory/nearby)');
 	fs.appendFileSync('/tmp/waymker-geo-debug.log', `[${new Date().toISOString()}] Routes registered\n`);
 };
 
