@@ -247,6 +247,12 @@
       font-size: 13px;
     }
     
+    .waymker-card-approximate {
+      color: #ff9500;
+      font-size: 12px;
+      font-style: italic;
+    }
+    
     .waymker-search-bar {
       width: 100%;
       padding: 12px 16px;
@@ -502,6 +508,7 @@
     fetch(url)
       .then(function(r) { return r.json(); })
       .then(function(data) {
+        console.log('[waymker-geo] API response:', data);
         if (data.error) {
           statusEl.innerHTML = '<div style="color: #c00;">Error: ' + data.error + '</div>';
           return;
@@ -547,10 +554,17 @@
       markerClusterGroup.addLayer(callerMarker);
     }
 
+    console.log('[waymker-geo] Displaying', displayedUsers.length, 'users');
     displayedUsers.forEach(function(u) {
-      if (u.latitude && u.longitude) {
+      // Use mapLatitude and mapLongitude (works for both privileged and regular users)
+      var mapLat = u.mapLatitude || u.latitude;
+      var mapLng = u.mapLongitude || u.longitude;
+      
+      console.log('[waymker-geo] User:', u.username, 'mapLat:', mapLat, 'mapLng:', mapLng, 'isApproximate:', u.isApproximate);
+      
+      if (mapLat && mapLng) {
         var color = allData.isPrivileged ? '#ff6b6b' : '#ffd93d';
-        var marker = L.circleMarker([u.latitude, u.longitude], {
+        var marker = L.circleMarker([mapLat, mapLng], {
           radius: 6,
           fillColor: color,
           color: '#fff',
@@ -559,10 +573,12 @@
           fillOpacity: 0.8
         });
 
+        var approxNote = u.isApproximate ? '<div style="color:#ff9500;font-size:11px;">📍 Approximate (' + u.approximateLevel + ')</div>' : '';
         var popupContent = '<div style="font-size:13px;">' +
           '<div style="font-weight:700;"><a href="/user/' + u.userslug + '" style="color:#0066cc;text-decoration:none;">' + u.username + '</a></div>' +
           '<div style="color:#666;">📍 ' + (u.neighborhood || u.city || 'Unknown') + '</div>' +
           '<div style="color:#0066cc;font-weight:600;">' + u.distance.toFixed(1) + ' miles</div>' +
+          approxNote +
           '</div>';
 
         marker.bindPopup(popupContent);
@@ -605,6 +621,8 @@
           roleStr = '<div class="waymker-card-role">👥 ' + roleNames.join(', ') + '</div>';
         }
       }
+      
+      var approxStr = u.isApproximate ? '<div class="waymker-card-approximate">📍 Approximate location (shown at ' + u.approximateLevel + ' level)</div>' : '';
 
       html += '<div class="waymker-user-card" data-uid="' + u.uid + '">' +
         '<div class="waymker-card-header">' +
@@ -618,6 +636,7 @@
         '<div class="waymker-card-distance">📍 ' + u.distance.toFixed(1) + ' miles</div>' +
         roleStr +
         repStr +
+        approxStr +
         '</div>' +
         '</div>';
     });
