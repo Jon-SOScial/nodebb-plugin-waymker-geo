@@ -21,7 +21,6 @@
       height: 100%;
     }
 
-    /* Improved cluster styling */
     .marker-cluster {
       background-clip: padding-box;
       border-radius: 40px;
@@ -212,7 +211,6 @@
       border-radius: 8px;
       padding: 16px;
       transition: all 0.2s ease;
-      cursor: pointer;
       user-select: none;
     }
     
@@ -220,6 +218,10 @@
       box-shadow: 0 8px 16px rgba(0,0,0,0.15);
       border-color: #dc143c;
       transform: translateY(-2px);
+    }
+
+    .waymker-user-card-clickable {
+      cursor: pointer;
     }
     
     .waymker-card-header {
@@ -451,6 +453,49 @@
   var centerBtn = document.getElementById('waymker-center');
   var layerSelect = document.getElementById('waymker-layer');
 
+  // Event delegation handler - attach once
+  resultsEl.addEventListener('click', function(e) {
+    var card = e.target.closest('.waymker-user-card');
+    if (!card) return;
+
+    var usernameLink = card.querySelector('.waymker-card-username');
+    
+    // If clicking the username link directly, let it navigate
+    if (e.target === usernameLink || usernameLink.contains(e.target)) {
+      return;
+    }
+
+    // Otherwise show marker on map
+    e.stopPropagation();
+    var uid = parseInt(card.getAttribute('data-uid'));
+    var marker = markerMap[uid];
+    if (marker) {
+      marker.openPopup();
+      map.setView(marker.getLatLng(), 15);
+    }
+  });
+
+  // Hover handlers with event delegation
+  resultsEl.addEventListener('mouseenter', function(e) {
+    var card = e.target.closest('.waymker-user-card');
+    if (!card) return;
+    var uid = parseInt(card.getAttribute('data-uid'));
+    var marker = markerMap[uid];
+    if (marker) {
+      marker.openTooltip();
+    }
+  }, true);
+
+  resultsEl.addEventListener('mouseleave', function(e) {
+    var card = e.target.closest('.waymker-user-card');
+    if (!card) return;
+    var uid = parseInt(card.getAttribute('data-uid'));
+    var marker = markerMap[uid];
+    if (marker) {
+      marker.closeTooltip();
+    }
+  }, true);
+
   function initMap() {
     map = L.map('waymker-map').setView([30.27, -97.74], 11);
     markerClusterGroup = L.markerClusterGroup({
@@ -674,7 +719,7 @@
         '<div class="waymker-card-header">' +
         '<img src="' + picture + '" alt="" class="waymker-card-avatar" onerror="this.style.display=' + "'" + 'none' + "'" + '" />' +
         '<div class="waymker-card-info">' +
-        '<a href="/user/' + u.userslug + '" class="waymker-card-username" onclick="return true;">' + u.username + '</a>' +
+        '<a href="/user/' + u.userslug + '" class="waymker-card-username">' + u.username + '</a>' +
         '<div class="waymker-card-location">📍 ' + locationStr + '</div>' +
         '</div>' +
         '</div>' +
@@ -687,52 +732,6 @@
         '</div>';
     });
     resultsEl.innerHTML = html;
-
-    // Attach click handlers AFTER rendering
-    setTimeout(function() {
-      document.querySelectorAll('.waymker-user-card').forEach(function(card) {
-        var uid = parseInt(card.getAttribute('data-uid'));
-        var usernameLink = card.querySelector('.waymker-card-username');
-        
-        // Card click handler - show marker on map
-        card.addEventListener('click', function(e) {
-          // If clicking the link itself, allow default behavior
-          if (e.target === usernameLink || usernameLink.contains(e.target)) {
-            return true;
-          }
-          
-          // Otherwise, show the marker
-          e.stopPropagation();
-          var marker = markerMap[uid];
-          if (marker) {
-            marker.openPopup();
-            map.setView(marker.getLatLng(), 15);
-          }
-          return false;
-        });
-
-        // Username link click handler - go to profile
-        usernameLink.addEventListener('click', function(e) {
-          e.stopPropagation();
-          return true;
-        });
-
-        // Hover effects
-        card.addEventListener('mouseenter', function() {
-          var marker = markerMap[uid];
-          if (marker) {
-            marker.openTooltip();
-          }
-        });
-        
-        card.addEventListener('mouseleave', function() {
-          var marker = markerMap[uid];
-          if (marker) {
-            marker.closeTooltip();
-          }
-        });
-      });
-    }, 0);
   }
 
   refreshBtn.addEventListener('click', loadUsers);
