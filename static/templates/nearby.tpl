@@ -46,7 +46,7 @@
         <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #333;">Group</label>
         <select id="waymker-group" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px;">
           <option value="">-- Any Group --</option>
-          <option value="loading">Loading groups...</option>
+          <option value="loading" disabled>Loading groups...</option>
         </select>
       </div>
 
@@ -96,15 +96,35 @@
     fetch('/api/v3/groups?truncate=true')
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        console.log('[waymker-geo] Groups loaded:', data);
-        if (data.groups && data.groups.length > 0) {
+        console.log('[waymker-geo] Groups API response:', data);
+        
+        var groupsList = [];
+        
+        // Handle different response formats
+        if (data.groups && Array.isArray(data.groups)) {
+          groupsList = data.groups;
+        } else if (Array.isArray(data)) {
+          groupsList = data;
+        } else if (data.payload && Array.isArray(data.payload)) {
+          groupsList = data.payload;
+        }
+        
+        console.log('[waymker-geo] Parsed groups:', groupsList);
+        
+        if (groupsList.length > 0) {
           groupSelect.innerHTML = '<option value="">-- Any Group --</option>';
-          data.groups.forEach(function(g) {
-            var opt = document.createElement('option');
-            opt.value = g.slug || g.name;
-            opt.textContent = g.displayName || g.name;
-            groupSelect.appendChild(opt);
+          groupsList.forEach(function(g) {
+            // Handle group being string or object
+            var name = typeof g === 'string' ? g : (g.displayName || g.name || g.slug || '');
+            var slug = typeof g === 'string' ? g : (g.slug || g.name || '');
+            if (name && slug) {
+              var opt = document.createElement('option');
+              opt.value = slug;
+              opt.textContent = name;
+              groupSelect.appendChild(opt);
+            }
           });
+          console.log('[waymker-geo] Groups populated:', groupSelect.options.length - 1);
         } else {
           groupSelect.innerHTML = '<option value="">-- No Groups Found --</option>';
         }
@@ -175,7 +195,19 @@
       }
 
       var repStr = u.reputation !== undefined ? '<div style="font-size: 13px; color: #666; margin-top: 4px;">💎 Reputation: <strong>' + u.reputation + '</strong></div>' : '';
-      var roleStr = u.roles && u.roles.length > 0 ? '<div style="font-size: 12px; color: #0066cc; margin-top: 6px; font-weight: 500;">' + u.roles.join(', ') + '</div>' : '';
+      
+      // Fix roles display - handle both strings and objects
+      var roleStr = '';
+      if (u.roles && u.roles.length > 0) {
+        var roleNames = u.roles.map(function(role) {
+          return typeof role === 'string' ? role : (role.displayName || role.name || role.slug || '');
+        }).filter(function(name) {
+          return name && name.length > 0;
+        });
+        if (roleNames.length > 0) {
+          roleStr = '<div style="font-size: 12px; color: #0066cc; margin-top: 6px; font-weight: 500;">👥 ' + roleNames.join(', ') + '</div>';
+        }
+      }
 
       html += '<div style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; display: flex; flex-direction: column;">';
       html += '<div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px;">';
