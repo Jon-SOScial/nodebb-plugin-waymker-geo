@@ -20,6 +20,37 @@
       width: 100%;
       height: 100%;
     }
+
+    /* Bold cluster numbers */
+    .marker-cluster {
+      background-clip: padding-box;
+      border-radius: 40px;
+      border: 3px solid rgba(0,0,0,0.3);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    .marker-cluster span {
+      font-size: 16px;
+      font-weight: 900;
+      color: white;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+      font-family: 'Arial Black', sans-serif;
+    }
+
+    .marker-cluster.marker-cluster-small {
+      background-color: rgba(181, 226, 140, 0.9);
+      border-color: rgba(110, 204, 57, 0.8);
+    }
+
+    .marker-cluster.marker-cluster-medium {
+      background-color: rgba(241, 211, 87, 0.9);
+      border-color: rgba(240, 194, 12, 0.8);
+    }
+
+    .marker-cluster.marker-cluster-large {
+      background-color: rgba(253, 156, 115, 0.9);
+      border-color: rgba(241, 128, 23, 0.8);
+    }
     
     .waymker-map-controls {
       position: absolute;
@@ -185,7 +216,7 @@
     
     .waymker-user-card:hover {
       box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-      border-color: #0066cc;
+      border-color: #dc143c;
       transform: translateY(-2px);
     }
     
@@ -193,6 +224,7 @@
       display: flex;
       gap: 12px;
       margin-bottom: 12px;
+      pointer-events: none;
     }
     
     .waymker-card-avatar {
@@ -215,6 +247,7 @@
       text-decoration: none;
       display: block;
       margin-bottom: 4px;
+      pointer-events: auto;
     }
     
     .waymker-card-username:hover {
@@ -573,14 +606,12 @@
 
     console.log('[waymker-geo] Displaying', displayedUsers.length, 'users');
     displayedUsers.forEach(function(u) {
-      // Use mapLatitude and mapLongitude (works for both privileged and regular users)
       var mapLat = u.mapLatitude || u.latitude;
       var mapLng = u.mapLongitude || u.longitude;
       
-      console.log('[waymker-geo] User:', u.username, 'mapLat:', mapLat, 'mapLng:', mapLng, 'isApproximate:', u.isApproximate);
+      console.log('[waymker-geo] User:', u.username, 'mapLat:', mapLat, 'mapLng:', mapLng);
       
       if (mapLat && mapLng) {
-        // Crimson red for privileged, orange-red for regular users - much more visible
         var color = allData.isPrivileged ? '#dc143c' : '#ff4500';
         var marker = L.circleMarker([mapLat, mapLng], {
           radius: 10,
@@ -659,6 +690,22 @@
         '</div>';
     });
     resultsEl.innerHTML = html;
+
+    // Add click handlers to cards (excluding the username link)
+    document.querySelectorAll('.waymker-user-card').forEach(function(card) {
+      card.addEventListener('click', function(e) {
+        if (e.target.closest('.waymker-card-username')) {
+          return; // Allow username link to work
+        }
+        var uid = parseInt(card.getAttribute('data-uid'));
+        var marker = markerMap[uid];
+        if (marker) {
+          // Open popup and center on marker
+          marker.openPopup();
+          map.setView(marker.getLatLng(), 15);
+        }
+      });
+    });
   }
 
   refreshBtn.addEventListener('click', loadUsers);
