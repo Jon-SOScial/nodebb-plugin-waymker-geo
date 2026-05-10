@@ -51,6 +51,10 @@
     .then(function(r) { return r.json(); })
     .then(function(data) {
       mapboxToken = data.mapboxToken;
+      console.log('[waymker-geo] Token loaded');
+    })
+    .catch(function(e) {
+      console.error('[waymker-geo] Error loading settings:', e);
     });
 
   addressInput.addEventListener('input', function(e) {
@@ -63,8 +67,18 @@
     var url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(query) + '.json?token=' + mapboxToken + '&limit=5';
 
     fetch(url)
-      .then(function(r) { return r.json(); })
+      .then(function(r) {
+        if (!r.ok) {
+          console.error('[waymker-geo] Mapbox error:', r.status);
+          return null;
+        }
+        return r.json();
+      })
       .then(function(data) {
+        if (!data || !data.features) {
+          console.error('[waymker-geo] No features returned');
+          return;
+        }
         suggestionContainer.innerHTML = '';
         data.features.forEach(function(feature) {
           var div = document.createElement('div');
@@ -82,6 +96,9 @@
           suggestionContainer.appendChild(div);
         });
         suggestionContainer.style.display = 'block';
+      })
+      .catch(function(e) {
+        console.error('[waymker-geo] Fetch error:', e);
       });
   });
 
