@@ -282,7 +282,6 @@
     }
   </style>
 
-  <!-- Map Container -->
   <div class="waymker-map-wrapper">
     <div id="waymker-map"></div>
     <div class="waymker-map-controls">
@@ -300,7 +299,6 @@
     </div>
   </div>
 
-  <!-- Filters Panel -->
   <div class="waymker-filters-panel">
     <div class="waymker-filters-content">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -347,7 +345,6 @@
     </div>
   </div>
 
-  <!-- Results Panel -->
   <div class="waymker-results-panel">
     <div class="waymker-results-content">
       <div class="waymker-status" id="waymker-nearby-status"></div>
@@ -399,10 +396,10 @@
   }
 
   function setupLayers() {
-    // Using \x7b for { and \x7d for } to bypass template engines
-    var osmUrl = 'https://{s}.tile.openstreetmap.org/' + '\x7bz\x7d' + '/' + '\x7bx\x7d' + '/' + '\x7by\x7d' + '.png';
+    // Using \x7b for { and \x7d for } to bypass Dust.js template engine
+    var osmUrl = 'https://' + '\x7bs\x7d' + '.tile.openstreetmap.org/' + '\x7bz\x7d' + '/' + '\x7bx\x7d' + '/' + '\x7by\x7d' + '.png';
     var satelliteUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + '\x7bz\x7d' + '/' + '\x7by\x7d' + '/' + '\x7bx\x7d';
-    var lightUrl = 'https://{s}.basemaps.cartocdn.com/light_all/' + '\x7bz\x7d' + '/' + '\x7bx\x7d' + '/' + '\x7by\x7d' + '.png';
+    var lightUrl = 'https://' + '\x7bs\x7d' + '.basemaps.cartocdn.com/light_all/' + '\x7bz\x7d' + '/' + '\x7bx\x7d' + '/' + '\x7by\x7d' + '.png';
 
     var osmLayer = L.tileLayer(osmUrl, {
       attribution: '© OpenStreetMap contributors',
