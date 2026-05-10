@@ -1,38 +1,23 @@
 {
-	"id": "nodebb-plugin-waymker-geo",
-	"url": "https://github.com/your-org/nodebb-plugin-waymker-geo",
-	"library": "./library.js",
-	"staticDirs": {
-		"static": "static"
-	},
-	"less": [],
-	"scripts": [
-		"static/lib/profile-edit.js",
-		"static/lib/group-edit.js"
-	],
-	"acpScripts": [
-		"static/lib/admin.js"
-	],
-	"modules": {
-		"../admin/plugins/waymker-geo.js": "static/lib/admin.js"
-	},
-	"templates": "static/templates",
-	"hooks": [
-		{ "hook": "static:app.load", "method": "init" },
-		{ "hook": "filter:admin.header.build", "method": "addAdminNavigation" },
-
-		{ "hook": "filter:user.whitelistFields", "method": "whitelistUserFields" },
-		{ "hook": "filter:user.updateProfile", "method": "addUpdatableFields" },
-		{ "hook": "filter:user.account.edit", "method": "onUserAccountEdit" },
-		{ "hook": "filter:user.account", "method": "onUserAccountView" },
-		{ "hook": "filter:user.getFields", "method": "filterUserFields" },
-		{ "hook": "filter:users.addFields", "method": "addUsersFields" },
-
-		{ "hook": "filter:group.get", "method": "onGroupGet" },
-		{ "hook": "action:group.update", "method": "onGroupUpdate" },
-
-		{ "hook": "filter:topic.create", "method": "attachGeoToTopic" },
-		{ "hook": "filter:post.create", "method": "attachGeoToPost" },
-		{ "hook": "filter:topic.build", "method": "expandGeoOnTopicBuild" }
-	]
+  "id": "nodebb-plugin-waymker-geo",
+  "name": "Waymker Geo",
+  "description": "Add geo-aware profile fields with Mapbox geocoding",
+  "url": "https://github.com/Jon-SOScial/nodebb-plugin-waymker-geo",
+  "library": "./library.js",
+  "staticDirs": {"static": "./static"},
+  "templates": "static/templates",
+  "languages": "languages",
+  "hooks": [
+    {"hook": "static:app.load", "method": "init"},
+    {"hook": "filter:admin.header.build", "method": "addAdminNavigation"}
+  ],
+  "acpScripts": [
+    "static/lib/admin.js",
+    "static/lib/admin-groups.js"
+  ],
+  "modules": {
+    "../admin/plugins/waymker-geo.js": "static/lib/admin.js",
+    "../admin/plugins/waymker-geo/groups.js": "static/lib/admin-groups.js"
+  },
+  "nbbpm": {"compatibility": "^4.0.0"}
 }

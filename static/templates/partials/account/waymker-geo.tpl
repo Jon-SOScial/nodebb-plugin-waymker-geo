@@ -1,55 +1,150 @@
-<!--
-	Geo profile fields partial.
+<style>
+#waymker-suggestions {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	right: 0;
+	background: white;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+	max-height: 200px;
+	overflow-y: auto;
+	z-index: 100;
+	margin-top: 2px;
+}
 
-	Themes can include this with:
-	    <!-- IMPORT partials/account/waymker-geo.tpl -->
-	inside their account/edit.tpl.
+#waymker-suggestions div {
+	padding: 10px 12px;
+	border-bottom: 1px solid #f0f0f0;
+	cursor: pointer;
+	font-size: 13px;
+}
 
-	If your theme is unmodified, the alternative is to inject this fragment
-	via filter:user.account.edit and a small jQuery snippet that targets the
-	right wrapper on the edit page.
--->
-<div data-waymker-geo-root class="waymker-geo-edit card mb-3">
-	<div class="card-header fw-bold">
-		<i class="fa fa-map-marker-alt me-1"></i> Location
-	</div>
-	<div class="card-body">
+#waymker-suggestions div:hover {
+	background-color: #f5f5f5;
+}
 
-		<div class="mb-3 position-relative">
-			<label class="form-label" for="waymker-geo-address">Search address</label>
-			<input type="text" id="waymker-geo-address" name="geo:address"
-				class="form-control" autocomplete="off"
-				value="{userData.waymkerGeo.fields.0.value}"
-				placeholder="Start typing your address..." />
-			<div data-waymker-geo-suggestions class="list-group position-absolute w-100 shadow-sm"
-				style="z-index: 30; top: 100%; display: none;"></div>
-			<div class="form-text">
-				Pick a result to auto-fill the components below. Each component has its own privacy toggle.
-			</div>
-		</div>
+#waymker-suggestions div:last-child {
+	border-bottom: none;
+}
 
-		<!-- BEGIN userData.waymkerGeo.fields -->
-		<!-- IF !@first -->
-		<div class="row mb-2 align-items-center">
-			<label class="col-sm-3 col-form-label" for="waymker-{./key}">{./label}</label>
-			<div class="col-sm-6">
-				<input type="text" id="waymker-{./key}" name="{./key}"
-					class="form-control form-control-sm" value="{./value}" />
-			</div>
-			<div class="col-sm-3">
-				<button type="button"
-					class="btn btn-outline-secondary btn-sm w-100"
-					data-waymker-privacy-cycle
-					data-field="{./key}"
-					data-current="{./privacy}">
-					<i data-waymker-privacy-icon class="fa fa-lock me-1"></i>
-					<span data-waymker-privacy-label>Only me</span>
-				</button>
-				<input type="hidden" name="{./key}:privacy" value="{./privacy}" />
-			</div>
-		</div>
-		<!-- ENDIF !@first -->
-		<!-- END userData.waymkerGeo.fields -->
+.waymker-geo-wrapper {
+	position: relative;
+}
+</style>
 
-	</div>
-</div>
+<script>
+document.addEventListener("DOMContentLoaded", async function() {
+	const geoField = document.querySelector('input[name="waymkerGeo:address"]');
+	if (!geoField) return;
+	
+	console.log('[waymker-geo] Starting - found address field');
+	
+	geoField.parentElement.classList.add('waymker-geo-wrapper');
+	
+	const res = await fetch('/api/v3/plugins/waymker-geo/settings');
+	const data = await res.json();
+	const mapboxToken = data.mapboxToken;
+	
+	if (!mapboxToken) return;
+	
+	const suggestionsDiv = document.createElement('div');
+	suggestionsDiv.id = 'waymker-suggestions';
+	suggestionsDiv.style.display = 'none';
+	geoField.parentElement.appendChild(suggestionsDiv);
+	
+	let debounceTimer;
+	geoField.addEventListener('input', function() {
+		clearTimeout(debounceTimer);
+		const query = this.value.trim();
+		
+		if (query.length < 2) {
+			suggestionsDiv.style.display = 'none';
+			return;
+		}
+		
+		debounceTimer = setTimeout(function() {
+			const encodedQuery = encodeURIComponent(query);
+			const url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodedQuery + '.json?access_token=' + mapboxToken + '&limit=5';
+			
+			fetch(url)
+				.then(r => r.json())
+				.then(data => {
+					suggestionsDiv.innerHTML = '';
+					
+					if (data.features && data.features.length > 0) {
+						console.log('[waymker-geo] Got ' + data.features.length + ' features');
+						
+						data.features.forEach(function(feature) {
+							const div = document.createElement('div');
+							div.textContent = feature.place_name;
+							
+							div.addEventListener('click', function() {
+								console.log('[waymker-geo] Feature clicked:', feature);
+								console.log('[waymker-geo] Feature context:', feature.context);
+								console.log('[waymker-geo] Coordinates:', feature.geometry.coordinates);
+								
+								// Fill main address field
+								geoField.value = feature.place_name;
+								
+								// Parse Mapbox context to extract components
+								let zipCode = '';
+								let city = '';
+								let state = '';
+								let country = '';
+								
+								if (feature.context) {
+									feature.context.forEach(function(ctx) {
+										console.log('[waymker-geo] Context item:', ctx.id, ctx.text);
+										if (ctx.id.indexOf('postcode') !== -1) zipCode = ctx.text;
+										if (ctx.id.indexOf('place') !== -1) city = ctx.text;
+										if (ctx.id.indexOf('region') !== -1) state = ctx.text;
+										if (ctx.id.indexOf('country') !== -1) country = ctx.text;
+									});
+								}
+								
+								console.log('[waymker-geo] Parsed:', {zipCode, city, state, country});
+								
+								// Fill additional fields
+								const zipField = document.querySelector('input[name="waymkerGeo:zipCode"]');
+								const cityField = document.querySelector('input[name="waymkerGeo:city"]');
+								const stateField = document.querySelector('input[name="waymkerGeo:state"]');
+								const countryField = document.querySelector('input[name="waymkerGeo:country"]');
+								const latField = document.querySelector('input[name="waymkerGeo:latitude"]');
+								const lngField = document.querySelector('input[name="waymkerGeo:longitude"]');
+								
+								console.log('[waymker-geo] Found fields:', {
+									zipField: !!zipField,
+									cityField: !!cityField,
+									stateField: !!stateField,
+									countryField: !!countryField,
+									latField: !!latField,
+									lngField: !!lngField
+								});
+								
+								if (zipField) zipField.value = zipCode;
+								if (cityField) cityField.value = city;
+								if (stateField) stateField.value = state;
+								if (countryField) countryField.value = country;
+								if (latField) latField.value = feature.geometry.coordinates[1];
+								if (lngField) lngField.value = feature.geometry.coordinates[0];
+								
+								console.log('[waymker-geo] Fields filled');
+								
+								suggestionsDiv.style.display = 'none';
+							});
+							
+							suggestionsDiv.appendChild(div);
+						});
+						suggestionsDiv.style.display = 'block';
+					}
+				});
+		}, 300);
+	});
+	
+	geoField.addEventListener('blur', function() {
+		setTimeout(() => suggestionsDiv.style.display = 'none', 150);
+	});
+});
+</script>
