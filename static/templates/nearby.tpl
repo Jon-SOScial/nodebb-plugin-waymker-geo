@@ -1,71 +1,402 @@
-<div class="waymker-nearby-page" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
-  <h1 style="margin-bottom: 30px; font-size: 32px;"><i class="fa fa-map-marker-alt"></i> Users Near Me</h1>
-
-  <!-- Search Bar -->
-  <div style="margin-bottom: 25px;">
-    <input type="text" id="waymker-search" placeholder="Search by username..." style="width: 100%; padding: 14px 16px; font-size: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,0.05);" />
-  </div>
-
-  <!-- Filter Section -->
-  <div style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 24px; margin-bottom: 25px;">
-    <h3 style="margin: 0 0 20px 0; font-size: 16px; font-weight: 700;">Filters</h3>
+<div class="waymker-nearby-container">
+  <style>
+    .waymker-nearby-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: #f8f9fa;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
     
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 20px;">
+    .waymker-map-wrapper {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    
+    #waymker-map {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .waymker-map-controls {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .waymker-map-btn {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      color: #333;
+    }
+    
+    .waymker-map-btn:hover {
+      background: #f5f5f5;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .waymker-filters-panel {
+      background: white;
+      padding: 20px;
+      border-bottom: 2px solid #e0e0e0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .waymker-filters-content {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .waymker-filters-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 16px 0;
+      color: #333;
+    }
+    
+    .waymker-filters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .waymker-filter-input {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .waymker-filter-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .waymker-filter-input input,
+    .waymker-filter-input select {
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      background: white;
+      color: #333;
+    }
+    
+    .waymker-filter-input input:focus,
+    .waymker-filter-input select:focus {
+      outline: none;
+      border-color: #0066cc;
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+    
+    .waymker-filter-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .waymker-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    
+    .waymker-btn-primary {
+      background: #0066cc;
+      color: white;
+    }
+    
+    .waymker-btn-primary:hover {
+      background: #0052a3;
+      box-shadow: 0 4px 8px rgba(0, 102, 204, 0.2);
+    }
+    
+    .waymker-btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+    
+    .waymker-btn-secondary:hover {
+      background: #e0e0e0;
+    }
+    
+    .waymker-results-panel {
+      flex: 0 0 auto;
+      background: white;
+      padding: 20px;
+      overflow-y: auto;
+      max-height: 35vh;
+    }
+    
+    .waymker-results-content {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .waymker-status {
+      font-size: 14px;
+      font-weight: 500;
+      color: #666;
+      margin-bottom: 16px;
+    }
+    
+    .waymker-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    
+    .waymker-user-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 16px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    
+    .waymker-user-card:hover {
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      border-color: #0066cc;
+      transform: translateY(-2px);
+    }
+    
+    .waymker-card-header {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .waymker-card-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #f0f0f0;
+    }
+    
+    .waymker-card-info {
+      flex: 1;
+    }
+    
+    .waymker-card-username {
+      font-weight: 700;
+      font-size: 15px;
+      color: #333;
+      text-decoration: none;
+      display: block;
+      margin-bottom: 4px;
+    }
+    
+    .waymker-card-username:hover {
+      color: #0066cc;
+    }
+    
+    .waymker-card-location {
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .waymker-card-details {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-top: 12px;
+      border-top: 1px solid #f0f0f0;
+      font-size: 13px;
+    }
+    
+    .waymker-card-distance {
+      font-weight: 700;
+      color: #0066cc;
+      font-size: 14px;
+    }
+    
+    .waymker-card-role {
+      color: #0066cc;
+      font-size: 12px;
+    }
+    
+    .waymker-search-bar {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 16px;
+      box-sizing: border-box;
+    }
+    
+    .waymker-search-bar:focus {
+      outline: none;
+      border-color: #0066cc;
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+    
+    .leaflet-popup-content {
+      max-width: 300px;
+    }
+    
+    .waymker-popup {
+      font-size: 13px;
+    }
+    
+    .waymker-popup-username {
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+    
+    .waymker-popup-location {
+      color: #666;
+      margin-bottom: 8px;
+    }
+    
+    .waymker-popup-distance {
+      color: #0066cc;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .waymker-nearby-container {
+        height: auto;
+        flex-direction: column;
+      }
       
-      <!-- Radius -->
-      <div>
-        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #333;">Radius (miles)</label>
-        <input type="number" id="waymker-radius" placeholder="Any distance" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px;" />
-      </div>
+      .waymker-map-wrapper {
+        height: 400px;
+        border-bottom: 2px solid #e0e0e0;
+      }
+      
+      .waymker-filters-panel {
+        max-height: none;
+      }
+      
+      .waymker-results-panel {
+        max-height: none;
+      }
+      
+      .waymker-cards-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .waymker-filters-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 
-      <!-- Limit -->
-      <div>
-        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #333;">Results Limit</label>
-        <input type="number" id="waymker-limit" value="50" min="1" max="200" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px;" />
-      </div>
-
-      <!-- Min Reputation -->
-      <div>
-        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #333;">Min Reputation</label>
-        <input type="number" id="waymker-minrep" placeholder="Any reputation" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px;" />
-      </div>
-
-      <!-- Role Type -->
-      <div>
-        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #333;">Role</label>
-        <select id="waymker-role" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px;">
-          <option value="">-- Any Role --</option>
-          <option value="administrator">Administrator</option>
-          <option value="moderator">Moderator</option>
-          <option value="user">Regular User</option>
-        </select>
-      </div>
-
-      <!-- Group Filter -->
-      <div>
-        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #333;">Group</label>
-        <select id="waymker-group" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px;">
-          <option value="">-- Any Group --</option>
-          <option value="loading" disabled>Loading groups...</option>
-        </select>
-      </div>
-    </div>
-
-    <div style="display: flex; gap: 10px;">
-      <button id="waymker-refresh" class="btn btn-primary" style="padding: 10px 24px; font-weight: 600;">Apply Filters</button>
-      <button id="waymker-reset" class="btn btn-secondary" style="padding: 10px 24px; font-weight: 600;">Reset</button>
+  <!-- Map Container -->
+  <div class="waymker-map-wrapper">
+    <div id="waymker-map"></div>
+    <div class="waymker-map-controls">
+      <button id="waymker-fullscreen" class="waymker-map-btn" title="Fullscreen">
+        <i class="fa fa-expand"></i> Fullscreen
+      </button>
+      <button id="waymker-center" class="waymker-map-btn" title="Center on my location">
+        <i class="fa fa-location-arrow"></i> My Location
+      </button>
+      <select id="waymker-layer" class="waymker-map-btn" style="padding: 8px 12px;">
+        <option value="osm">OpenStreetMap</option>
+        <option value="satellite">Satellite</option>
+        <option value="light">Light</option>
+      </select>
     </div>
   </div>
 
-  <!-- Status -->
-  <div id="waymker-nearby-status" style="margin-bottom: 20px; color: #555; font-size: 14px; font-weight: 500;"></div>
+  <!-- Filters Panel -->
+  <div class="waymker-filters-panel">
+    <div class="waymker-filters-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 class="waymker-filters-title">Filters</h3>
+      </div>
+      
+      <input type="text" id="waymker-search" class="waymker-search-bar" placeholder="Search by username..." />
+      
+      <div class="waymker-filters-grid">
+        <div class="waymker-filter-input">
+          <label class="waymker-filter-label">Radius (miles)</label>
+          <input type="number" id="waymker-radius" placeholder="Any distance" />
+        </div>
+        <div class="waymker-filter-input">
+          <label class="waymker-filter-label">Results Limit</label>
+          <input type="number" id="waymker-limit" value="50" min="1" max="200" />
+        </div>
+        <div class="waymker-filter-input">
+          <label class="waymker-filter-label">Min Reputation</label>
+          <input type="number" id="waymker-minrep" placeholder="Any reputation" />
+        </div>
+        <div class="waymker-filter-input">
+          <label class="waymker-filter-label">Role</label>
+          <select id="waymker-role">
+            <option value="">-- Any Role --</option>
+            <option value="administrator">Administrator</option>
+            <option value="moderator">Moderator</option>
+            <option value="user">Regular User</option>
+          </select>
+        </div>
+        <div class="waymker-filter-input">
+          <label class="waymker-filter-label">Group</label>
+          <select id="waymker-group">
+            <option value="">-- Any Group --</option>
+            <option value="loading" disabled>Loading groups...</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="waymker-filter-buttons">
+        <button id="waymker-refresh" class="waymker-btn waymker-btn-primary">Apply Filters</button>
+        <button id="waymker-reset" class="waymker-btn waymker-btn-secondary">Reset</button>
+      </div>
+    </div>
+  </div>
 
-  <!-- Results Container -->
-  <div id="waymker-nearby-results" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;"></div>
+  <!-- Results Panel -->
+  <div class="waymker-results-panel">
+    <div class="waymker-results-content">
+      <div class="waymker-status" id="waymker-nearby-status"></div>
+      <div class="waymker-cards-grid" id="waymker-nearby-results"></div>
+    </div>
+  </div>
 </div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.1/MarkerCluster.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.1/MarkerCluster.Default.min.css" />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.1/leaflet.markercluster.min.js"></script>
 
 <script>
 (function() {
+  var map;
+  var markerClusterGroup;
+  var markerMap = {};
+  var allData = {};
+  var displayedUsers = [];
+  var callerLocation = null;
+  var currentLayerGroup = null;
+
   var searchInput = document.getElementById('waymker-search');
   var statusEl = document.getElementById('waymker-nearby-status');
   var resultsEl = document.getElementById('waymker-nearby-results');
@@ -76,9 +407,69 @@
   var minRepInput = document.getElementById('waymker-minrep');
   var roleSelect = document.getElementById('waymker-role');
   var groupSelect = document.getElementById('waymker-group');
-  
-  var allData = {};
-  var displayedUsers = [];
+  var fullscreenBtn = document.getElementById('waymker-fullscreen');
+  var centerBtn = document.getElementById('waymker-center');
+  var layerSelect = document.getElementById('waymker-layer');
+
+  // Initialize map
+  function initMap() {
+    map = L.map('waymker-map').setView([30.27, -97.74], 11);
+    markerClusterGroup = L.markerClusterGroup({
+      maxClusterRadius: 80,
+      disableClusteringAtZoom: 15
+    });
+    
+    setupLayers();
+    map.addLayer(markerClusterGroup);
+  }
+
+  // Setup different tile layers
+  function setupLayers() {
+    var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19
+    });
+
+    var satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '© Esri',
+      maxZoom: 19
+    });
+
+    var lightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© CartoDB',
+      maxZoom: 19
+    });
+
+    currentLayerGroup = osmLayer;
+    osmLayer.addTo(map);
+
+    layerSelect.addEventListener('change', function(e) {
+      map.removeLayer(currentLayerGroup);
+      if (e.target.value === 'osm') {
+        currentLayerGroup = osmLayer;
+      } else if (e.target.value === 'satellite') {
+        currentLayerGroup = satelliteLayer;
+      } else if (e.target.value === 'light') {
+        currentLayerGroup = lightLayer;
+      }
+      map.addLayer(currentLayerGroup);
+    });
+  }
+
+  // Center on caller location
+  centerBtn.addEventListener('click', function() {
+    if (callerLocation) {
+      map.setView([callerLocation.latitude, callerLocation.longitude], 13);
+    }
+  });
+
+  // Fullscreen button
+  fullscreenBtn.addEventListener('click', function() {
+    var container = document.querySelector('.waymker-map-wrapper');
+    if (container.requestFullscreen) {
+      container.requestFullscreen();
+    }
+  });
 
   function loadGroups() {
     fetch('/api/v3/groups?truncate=true')
@@ -113,6 +504,8 @@
   function loadUsers() {
     statusEl.textContent = 'Loading...';
     resultsEl.innerHTML = '';
+    markerClusterGroup.clearLayers();
+    markerMap = {};
 
     var params = [];
     if (radiusInput.value) params.push('radius=' + encodeURIComponent(radiusInput.value));
@@ -127,11 +520,25 @@
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.error) {
-          statusEl.innerHTML = '<div style="color: #c00;">' + data.error + '</div>';
+          statusEl.innerHTML = '<div style="color: #c00;">Error: ' + data.error + '</div>';
           return;
         }
 
         allData = data;
+        if (data.callerLocation) {
+          callerLocation = data.callerLocation;
+          // Add caller marker
+          var callerMarker = L.circleMarker([callerLocation.latitude, callerLocation.longitude], {
+            radius: 8,
+            fillColor: '#0066cc',
+            color: '#fff',
+            weight: 3,
+            opacity: 1,
+            fillOpacity: 0.8
+          }).bindPopup('<div class="waymker-popup"><div class="waymker-popup-username">Your Location</div></div>');
+          markerClusterGroup.addLayer(callerMarker);
+        }
+        
         filterAndDisplay();
       })
       .catch(function(e) {
@@ -143,6 +550,42 @@
     var searchTerm = searchInput.value.toLowerCase();
     displayedUsers = allData.users.filter(function(u) {
       return !searchTerm || u.username.toLowerCase().indexOf(searchTerm) !== -1;
+    });
+
+    // Update map markers
+    markerClusterGroup.clearLayers();
+    displayedUsers.forEach(function(u) {
+      if (u.latitude && u.longitude) {
+        var isPrivileged = allData.isPrivileged;
+        var color = isPrivileged ? '#ff6b6b' : '#ffd93d';
+        var marker = L.circleMarker([u.latitude, u.longitude], {
+          radius: 6,
+          fillColor: color,
+          color: '#fff',
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.8
+        });
+
+        var popupContent = '<div class="waymker-popup">' +
+          '<div class="waymker-popup-username"><a href="/user/' + u.userslug + '" style="color: #0066cc; text-decoration: none;">' + u.username + '</a></div>' +
+          '<div class="waymker-popup-location">📍 ' + (u.neighborhood || u.city || 'Unknown') + '</div>' +
+          '<div class="waymker-popup-distance">' + u.distance.toFixed(1) + ' miles away</div>' +
+          '</div>';
+
+        marker.bindPopup(popupContent);
+        marker.on('click', function() {
+          // Scroll to user card
+          var userCard = document.querySelector('[data-uid="' + u.uid + '"]');
+          if (userCard) {
+            userCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            userCard.style.highlight = 'yellow';
+          }
+        });
+
+        markerClusterGroup.addLayer(marker);
+        markerMap[u.uid] = marker;
+      }
     });
 
     if (displayedUsers.length === 0) {
@@ -162,35 +605,31 @@
       if (u.state) locationParts.push(u.state);
       var locationStr = locationParts.join(', ') || 'Unknown location';
 
-      var coordsStr = '';
-      if (allData.isPrivileged && u.latitude && u.longitude) {
-        coordsStr = '<div style="font-size: 12px; color: #999; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f0f0f0;">' + u.latitude.toFixed(4) + ', ' + u.longitude.toFixed(4) + '</div>';
-      }
-
-      var repStr = u.reputation !== undefined ? '<div style="font-size: 13px; color: #666; margin-top: 4px;">💎 ' + u.reputation + '</div>' : '';
+      var repStr = u.reputation !== undefined ? '<div style="margin-top: 6px;">💎 Reputation: ' + u.reputation + '</div>' : '';
       var roleStr = '';
       if (u.roles && u.roles.length > 0) {
         var roleNames = u.roles.map(function(role) {
           return typeof role === 'string' ? role : (role.displayName || role.name || role.slug || '');
         }).filter(function(name) { return name && name.length > 0; });
         if (roleNames.length > 0) {
-          roleStr = '<div style="font-size: 12px; color: #0066cc; margin-top: 6px;">👥 ' + roleNames.join(', ') + '</div>';
+          roleStr = '<div class="waymker-card-role">👥 ' + roleNames.join(', ') + '</div>';
         }
       }
 
-      html += '<div style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px;">';
-      html += '<div style="display: flex; gap: 12px; margin-bottom: 12px;">';
-      html += '<img src="' + picture + '" alt="" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;" onerror="this.style.display=\'none\'" />';
-      html += '<div style="flex: 1;">';
-      html += '<div style="font-weight: 700;"><a href="/user/' + u.userslug + '" style="color: inherit; text-decoration: none;">' + u.username + '</a></div>';
-      html += '<div style="color: #666; font-size: 13px;">📍 ' + locationStr + '</div>';
-      html += '</div>';
-      html += '</div>';
-      html += repStr + roleStr + coordsStr;
-      html += '<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f5f5f5; text-align: right;">';
-      html += '<div style="font-weight: 700; color: #0066cc;">' + u.distance.toFixed(1) + ' mi</div>';
-      html += '</div>';
-      html += '</div>';
+      html += '<div class="waymker-user-card" data-uid="' + u.uid + '">' +
+        '<div class="waymker-card-header">' +
+        '<img src="' + picture + '" alt="" class="waymker-card-avatar" onerror="this.style.display=\'none\'" />' +
+        '<div class="waymker-card-info">' +
+        '<a href="/user/' + u.userslug + '" class="waymker-card-username">' + u.username + '</a>' +
+        '<div class="waymker-card-location">📍 ' + locationStr + '</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="waymker-card-details">' +
+        '<div class="waymker-card-distance">📍 ' + u.distance.toFixed(1) + ' miles</div>' +
+        repStr +
+        roleStr +
+        '</div>' +
+        '</div>';
     });
     resultsEl.innerHTML = html;
   }
@@ -212,6 +651,8 @@
     }
   });
 
+  // Initialize
+  initMap();
   loadGroups();
   loadUsers();
 })();
