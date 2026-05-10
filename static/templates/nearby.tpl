@@ -399,9 +399,10 @@
   }
 
   function setupLayers() {
-    var osmUrl = 'https://{~lb}s{~rb}.tile.openstreetmap.org/{~lb}z{~rb}/{~lb}x{~rb}/{~lb}y{~rb}.png';
-    var satelliteUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{~lb}z{~rb}/{~lb}y{~rb}/{~lb}x{~rb}';
-    var lightUrl = 'https://{~lb}s{~rb}.basemaps.cartocdn.com/light_all/{~lb}z{~rb}/{~lb}x{~rb}/{~lb}y{~rb}.png';
+    // Using \x7b for { and \x7d for } to bypass template engines
+    var osmUrl = 'https://{s}.tile.openstreetmap.org/' + '\x7bz\x7d' + '/' + '\x7bx\x7d' + '/' + '\x7by\x7d' + '.png';
+    var satelliteUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/' + '\x7bz\x7d' + '/' + '\x7by\x7d' + '/' + '\x7bx\x7d';
+    var lightUrl = 'https://{s}.basemaps.cartocdn.com/light_all/' + '\x7bz\x7d' + '/' + '\x7bx\x7d' + '/' + '\x7by\x7d' + '.png';
 
     var osmLayer = L.tileLayer(osmUrl, {
       attribution: '© OpenStreetMap contributors',
