@@ -252,30 +252,6 @@
       border-color: #0066cc;
       box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
     }
-    
-    .leaflet-popup-content {
-      max-width: 300px;
-    }
-    
-    .waymker-popup {
-      font-size: 13px;
-    }
-    
-    .waymker-popup-username {
-      font-weight: 700;
-      font-size: 14px;
-      margin-bottom: 6px;
-    }
-    
-    .waymker-popup-location {
-      color: #666;
-      margin-bottom: 8px;
-    }
-    
-    .waymker-popup-distance {
-      color: #0066cc;
-      font-weight: 600;
-    }
 
     @media (max-width: 768px) {
       .waymker-nearby-container {
@@ -423,12 +399,11 @@
     map.addLayer(markerClusterGroup);
   }
 
-  // Setup different tile layers with correct URL templates
+  // Setup different tile layers
   function setupLayers() {
     var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
-      maxZoom: 19,
-      subdomains: 'abc'
+      maxZoom: 19
     });
 
     var satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -436,10 +411,9 @@
       maxZoom: 19
     });
 
-    var lightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    var lightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
       attribution: '© CartoDB',
-      maxZoom: 19,
-      subdomains: 'abc'
+      maxZoom: 19
     });
 
     currentLayerGroup = osmLayer;
@@ -458,14 +432,12 @@
     });
   }
 
-  // Center on caller location
   centerBtn.addEventListener('click', function() {
     if (callerLocation) {
       map.setView([callerLocation.latitude, callerLocation.longitude], 13);
     }
   });
 
-  // Fullscreen button
   fullscreenBtn.addEventListener('click', function() {
     var container = document.querySelector('.waymker-map-wrapper');
     if (container.requestFullscreen) {
@@ -529,7 +501,6 @@
         allData = data;
         if (data.callerLocation) {
           callerLocation = data.callerLocation;
-          // Add caller marker
           var callerMarker = L.circleMarker([callerLocation.latitude, callerLocation.longitude], {
             radius: 8,
             fillColor: '#0066cc',
@@ -537,7 +508,7 @@
             weight: 3,
             opacity: 1,
             fillOpacity: 0.8
-          }).bindPopup('<div class="waymker-popup"><div class="waymker-popup-username">Your Location</div></div>');
+          }).bindPopup('<div style="font-weight:700;">Your Location</div>');
           markerClusterGroup.addLayer(callerMarker);
         }
         
@@ -554,8 +525,19 @@
       return !searchTerm || u.username.toLowerCase().indexOf(searchTerm) !== -1;
     });
 
-    // Update map markers
     markerClusterGroup.clearLayers();
+    if (callerLocation) {
+      var callerMarker = L.circleMarker([callerLocation.latitude, callerLocation.longitude], {
+        radius: 8,
+        fillColor: '#0066cc',
+        color: '#fff',
+        weight: 3,
+        opacity: 1,
+        fillOpacity: 0.8
+      }).bindPopup('<div style="font-weight:700;">Your Location</div>');
+      markerClusterGroup.addLayer(callerMarker);
+    }
+
     displayedUsers.forEach(function(u) {
       if (u.latitude && u.longitude) {
         var isPrivileged = allData.isPrivileged;
@@ -569,15 +551,14 @@
           fillOpacity: 0.8
         });
 
-        var popupContent = '<div class="waymker-popup">' +
-          '<div class="waymker-popup-username"><a href="/user/' + u.userslug + '" style="color: #0066cc; text-decoration: none;">' + u.username + '</a></div>' +
-          '<div class="waymker-popup-location">📍 ' + (u.neighborhood || u.city || 'Unknown') + '</div>' +
-          '<div class="waymker-popup-distance">' + u.distance.toFixed(1) + ' miles away</div>' +
+        var popupContent = '<div style="font-size:13px;">' +
+          '<div style="font-weight:700;"><a href="/user/' + u.userslug + '" style="color:#0066cc;text-decoration:none;">' + u.username + '</a></div>' +
+          '<div style="color:#666;">📍 ' + (u.neighborhood || u.city || 'Unknown') + '</div>' +
+          '<div style="color:#0066cc;font-weight:600;">' + u.distance.toFixed(1) + ' miles</div>' +
           '</div>';
 
         marker.bindPopup(popupContent);
         marker.on('click', function() {
-          // Scroll to user card
           var userCard = document.querySelector('[data-uid="' + u.uid + '"]');
           if (userCard) {
             userCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -591,7 +572,7 @@
 
     if (displayedUsers.length === 0) {
       statusEl.textContent = 'No users found.';
-      resultsEl.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 20px; text-align: center; color: #888;">No matching users found.</div>';
+      resultsEl.innerHTML = '<div style="grid-column:1/-1;padding:40px 20px;text-align:center;color:#888;">No matching users found.</div>';
       return;
     }
 
@@ -606,14 +587,14 @@
       if (u.state) locationParts.push(u.state);
       var locationStr = locationParts.join(', ') || 'Unknown location';
 
-      var repStr = u.reputation !== undefined ? '<div style="margin-top: 6px;">💎 Reputation: ' + u.reputation + '</div>' : '';
+      var repStr = u.reputation !== undefined ? '<div style="margin-top:6px;">💎 Reputation: ' + u.reputation + '</div>' : '';
       var roleStr = '';
       if (u.roles && u.roles.length > 0) {
         var roleNames = u.roles.map(function(role) {
           return typeof role === 'string' ? role : (role.displayName || role.name || role.slug || '');
         }).filter(function(name) { return name && name.length > 0; });
         if (roleNames.length > 0) {
-          roleStr = '<div class="waymker-card-role">👥 ' + roleNames.join(', ') + '</div>';
+          roleStr = '<div style="color:#0066cc;font-size:12px;">👥 ' + roleNames.join(', ') + '</div>';
         }
       }
 
@@ -652,7 +633,6 @@
     }
   });
 
-  // Initialize
   initMap();
   loadGroups();
   loadUsers();
