@@ -1,26 +1,16 @@
 {
-  "id": "nodebb-plugin-waymker-geo",
-  "name": "Waymker Geo",
-  "description": "Add geo-aware profile fields with Mapbox geocoding",
-  "url": "https://github.com/Jon-SOScial/nodebb-plugin-waymker-geo",
-  "library": "./library.js",
-  "staticDirs": {"static": "./static"},
-  "templates": "static/templates",
-  "languages": "languages",
-  "hooks": [
-    {"hook": "static:app.load", "method": "init"},
-    {"hook": "filter:admin.header.build", "method": "addAdminNavigation"}
-  ],
-  "acpScripts": [
-    "static/lib/admin.js",
-    "static/lib/admin-groups.js"
-  ],
-  "modules": {
+	"id": "nodebb-plugin-waymker-geo",
+	"name": "Waymker Geo",
+	"description": "Geographic features for Waymker",
+	"url": "https://github.com/Jon-SOScial/nodebb-plugin-waymker-geo",
+	"library": "./library.js",
+	"hooks": [
+		{ "hook": "static:app.load", "method": "loadGeoFeatures" }
+	],
 	"scripts": [
 		"static/lib/nearby.js"
 	],
-    "../admin/plugins/waymker-geo.js": "static/lib/admin.js",
-    "../admin/plugins/waymker-geo/groups.js": "static/lib/admin-groups.js"
-  },
-  "nbbpm": {"compatibility": "^4.0.0"}
+	"css": [
+		"static/styles.css"
+	]
 }

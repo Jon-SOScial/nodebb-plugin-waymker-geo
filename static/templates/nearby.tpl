@@ -37,12 +37,6 @@
 	<div id="wg-results-grid" class="wg-grid"></div>
 </div>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.Default.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.js"></script>
-
 <style>
 	#wg-map img.leaflet-tile, #wg-map .leaflet-container img, .leaflet-container img.leaflet-tile, .leaflet-tile {
 		max-width: none !important; max-height: none !important; width: 256px !important; height: 256px !important;
@@ -85,7 +79,7 @@
 <script>
 (function() {
 	'use strict';
-	const state = window.waymkerGeoState = {
+	const state = {
 		allUsers: [],
 		filteredUsers: [],
 		groupsList: [],
@@ -368,10 +362,16 @@
 	}
 
 	function init() {
-		if (typeof L === 'undefined' || typeof L.map === 'undefined' || typeof L.markerClusterGroup === 'undefined') { setTimeout(init, 200); return; }
+		// FIXED: Safe typeof checks for Leaflet
+		if (typeof L === 'undefined' || typeof L.map === 'undefined' || typeof L.markerClusterGroup === 'undefined') {
+			console.log('[waymker-geo] Leaflet not ready, retrying...');
+			setTimeout(init, 200);
+			return;
+		}
 		if (state.initialized) cleanup();
 		state.initialized = true;
 		state.initId++;
+		console.log('[waymker-geo] init() starting, initId: ' + state.initId);
 		initMap();
 		$('wg-role').addEventListener('change', function() { if (state.initId && state.initialized) fetchUsers(); });
 		$('wg-group').addEventListener('change', function() { if (state.initId && state.initialized) fetchUsers(); });
@@ -419,15 +419,4 @@
 		}, 100);
 	}
 })();
-</script>
-
-<script>
-// Ensure Leaflet is loaded before initializing
-setTimeout(function() {
-	if (typeof L !== 'undefined' && typeof state !== 'undefined' && state.map) {
-		console.log('[waymker-geo] Post-load size validation');
-		state.map.invalidateSize();
-		renderMarkers();
-	}
-}, 500);
 </script>
