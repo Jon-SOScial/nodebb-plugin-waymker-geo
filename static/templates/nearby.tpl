@@ -324,6 +324,12 @@
 		
 		state.map = L.map('wg-map').setView([39.5, -98.35], 4);
 		console.log('[waymker-geo] Leaflet map created');
+		
+		// Force size recalculation as soon as map is created
+		state.map.whenReady(function() {
+			console.log('[waymker-geo] Map ready, invalidating size');
+			state.map.invalidateSize();
+		});
 
 		// CRITICAL: Build tile URL at runtime using hex escapes for { and }
 		// Dust.js (NodeBB's template engine) strips literal {s}/{z}/{x}/{y}
@@ -339,6 +345,16 @@
 
 		// Don't add empty markerCluster yet - wait for renderMarkers() to populate it
 		state.markerCluster = L.markerClusterGroup({
+			// Disable clustering at zoom 12+ so markers always show individually when zoomed in
+			disableClusteringAtZoom: 12,
+			// Don't spiderfy at max zoom - just show markers
+			spiderfyOnMaxZoom: false,
+			// Smaller cluster radius for tighter clusters
+			maxClusterRadius: 60,
+			// Show coverage area on hover
+			showCoverageOnHover: false,
+			// Zoom to bounds when cluster clicked
+			zoomToBoundsOnClick: true,
 			iconCreateFunction: function(cluster) {
 				var n = cluster.getChildCount();
 				var bg = n >= 50 ? '#f44336' : (n >= 10 ? '#ff9800' : '#4caf50');
@@ -454,21 +470,48 @@
 			bounds.push([lat, lng]);
 		});
 
-		// Ensure markerCluster is added to the map
-		if (!state.map.hasLayer(state.markerCluster)) {
-			console.log('[waymker-geo] Adding markerCluster to map');
-			state.map.whenReady(function() {
-				if (!state.map.hasLayer(state.markerCluster)) {
-					state.map.addLayer(state.markerCluster);
-					console.log('[waymker-geo] MarkerCluster added after map ready');
-				}
-			});
-		} else {
-			console.log('[waymker-geo] MarkerCluster already on map');
+		// Ensure markerCluster is added to the map (synchronously after population)
+		try {
+			if (!state.map.hasLayer(state.markerCluster)) {
+				console.log('[waymker-geo] Adding markerCluster to map');
+				state.map.addLayer(state.markerCluster);
+				console.log('[waymker-geo] MarkerCluster added');
+			} else {
+				console.log('[waymker-geo] MarkerCluster already on map');
+			}
+		} catch (e) {
+			console.error('[waymker-geo] Error adding cluster to map:', e);
 		}
+		
+		// Force map redraw to ensure markers are visible
+		setTimeout(function() {
+			if (state.map) {
+				state.map.invalidateSize();
+				console.log('[waymker-geo] Map invalidated after cluster add');
+			}
+		}, 50);
+		setTimeout(function() {
+			if (state.map) state.map.invalidateSize();
+		}, 200);
 
 		if (bounds.length > 1) {
-			try { state.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 }); } catch (e) {}
+			// Calculate bounds to check if markers are in the same location
+			var boundsObj = L.latLngBounds(bounds);
+			var boundsSize = boundsObj.getSouthWest().distanceTo(boundsObj.getNorthEast());
+			console.log('[waymker-geo] Bounds distance: ' + boundsSize.toFixed(0) + ' meters');
+			
+			if (boundsSize < 100) {
+				// Markers are all in the same spot (within 100m) - use fixed zoom
+				var center = boundsObj.getCenter();
+				state.map.setView(center, 13);
+				console.log('[waymker-geo] Markers at same location, set zoom to 13');
+			} else {
+				// Markers spread out - fit bounds
+				try { state.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 }); } catch (e) {}
+			}
+		} else if (bounds.length === 1) {
+			// Single marker - zoom to that location
+			state.map.setView(bounds[0], 13);
 		}
 		
 		var markerCount = Object.keys(state.markerMap).length;
@@ -671,8 +714,8 @@
 					return;
 				}
 
-				// Center map on this marker
-				state.map.flyTo(latlng, 13, { duration: 0.8 });
+				// Center map on this marker - zoom 14 ensures marker is not clustered
+				state.map.flyTo(latlng, 14, { duration: 0.8 });
 
 				// Highlight the card
 				document.querySelectorAll('.wg-card.wg-highlight').forEach(function(el) {
