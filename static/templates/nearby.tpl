@@ -31,7 +31,7 @@
 
 	<!-- Native Cards Grid -->
 	<h3 id="wg-results-info" style="margin-top: 30px;">Members</h3>
-	<div id="wg-results-grid" class="users-list" style="display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));"></div>
+	<div id="wg-results-grid" style="display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));"></div>
 </div>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
@@ -39,129 +39,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.Default.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.js"></script>
-
-<style>
-	.user-card {
-		background: #fff;
-		border: 1px solid #e9ecef;
-		border-radius: 4px;
-		overflow: hidden;
-		transition: box-shadow 0.2s;
-	}
-	.user-card:hover {
-		box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-	}
-	.user-card.wg-highlight {
-		box-shadow: 0 0 0 3px #0066cc !important;
-	}
-	.user-card > .user-card-image {
-		background: #f8f9fa;
-		height: 150px;
-		position: relative;
-	}
-	.user-card > .user-card-image img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-	}
-	.user-card > .user-card-body {
-		padding: 15px;
-		position: relative;
-	}
-	.user-card > .user-card-body .user-picture {
-		position: absolute;
-		top: -35px;
-		left: 15px;
-		width: 70px;
-		height: 70px;
-		border-radius: 4px;
-		border: 3px solid #fff;
-		box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-		background: #f8f9fa;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 24px;
-		font-weight: bold;
-		color: #fff;
-	}
-	.user-card .user-info {
-		margin-top: 40px;
-	}
-	.user-card .user-info h4 {
-		margin: 0 0 5px 0;
-		font-size: 16px;
-		font-weight: 600;
-	}
-	.user-card .user-info h4 a {
-		color: #0066cc;
-		text-decoration: none;
-	}
-	.user-card .user-info h4 a:hover {
-		text-decoration: underline;
-	}
-	.user-card .user-info .user-slug {
-		color: #999;
-		font-size: 12px;
-		margin-bottom: 5px;
-	}
-	.user-card .user-info .user-status {
-		font-size: 12px;
-		color: #666;
-		margin-bottom: 10px;
-	}
-	.user-card .user-location {
-		font-size: 12px;
-		color: #666;
-		margin: 5px 0;
-	}
-	.user-card .user-distance {
-		font-size: 12px;
-		color: #ff6600;
-		font-weight: 600;
-		margin: 5px 0;
-	}
-	.user-card .user-stats {
-		display: flex;
-		gap: 15px;
-		margin: 10px 0;
-		padding-top: 10px;
-		border-top: 1px solid #f0f0f0;
-		font-size: 12px;
-	}
-	.user-card .user-stats > div {
-		text-align: center;
-	}
-	.user-card .user-stats .stat-value {
-		display: block;
-		font-size: 16px;
-		font-weight: 600;
-		color: #333;
-	}
-	.user-card .user-stats .stat-label {
-		display: block;
-		color: #999;
-		margin-top: 2px;
-	}
-	.user-card .user-actions {
-		margin-top: 10px;
-		display: flex;
-		gap: 8px;
-	}
-	.user-card .user-actions .btn {
-		flex: 1;
-		font-size: 12px;
-		padding: 6px 10px;
-	}
-
-	.leaflet-popup-content-wrapper {
-		border-radius: 4px;
-	}
-	.leaflet-popup-content {
-		margin: 0;
-		width: 320px !important;
-	}
-</style>
 
 <script>
 (function() {
@@ -175,7 +52,6 @@
 		searchTimer: null,
 		map: null,
 		markerCluster: null,
-		markerMap: {},
 	};
 
 	function $(id) { return document.getElementById(id); }
@@ -210,22 +86,27 @@
 		if (u.state) locParts.push(u.state);
 		const loc = locParts.join(', ') || u.country || '?';
 
-		return '<div class="user-card" style="margin: 0; border: none; box-shadow: none;">' +
-			'<div class="user-card-image" style="height: 100px;"><div style="background: ' + col + '; height: 100%; display: flex; align-items: center; justify-content: center;"><span style="font-size: 40px; color: white; font-weight: bold;">' + txt + '</span></div></div>' +
-			'<div class="user-card-body" style="padding: 15px;">' +
-			'<div style="margin-top: 0;">' +
-			'<h4 style="margin: 0 0 5px 0;"><a href="/user/' + esc(u.userslug) + '" style="color: #0066cc; text-decoration: none;">' + esc(u.username) + '</a></h4>' +
-			'<div style="font-size: 12px; color: #999;">@' + esc(u.userslug) + '</div>' +
-			'<div class="user-location">📍 ' + esc(loc) + '</div>' +
-			'<div class="user-distance">' + distStr + '</div>' +
-			'<div class="user-stats" style="display: flex; gap: 10px; margin-top: 10px; font-size: 11px;">' +
-			'<div style="text-align: center;"><span style="font-weight: 600; font-size: 14px;">' + (u.reputation || 0) + '</span><br>REPUTATION</div>' +
-			'<div style="text-align: center;"><span style="font-weight: 600; font-size: 14px;">' + (u.postcount || 0) + '</span><br>POSTS</div>' +
-			'<div style="text-align: center;"><span style="font-weight: 600; font-size: 14px;">' + (u.followerCount || 0) + '</span><br>FOLLOWERS</div>' +
+		return '<div class="profile-card-cover-container mb-2" style="max-width: 320px; border: 1px solid #e9ecef; border-radius: 4px;">' +
+			'<div class="profile-card-cover rounded-top" style="background-image: url(/assets/images/cover-default.png); background-position: 50% 50%; height: 100px; position: relative;">' +
+			'<div class="profile-card-avatar">' +
+			'<a href="/user/' + esc(u.userslug) + '">' +
+			'<span title="' + esc(u.username) + '" data-uid="' + u.uid + '" class="avatar avatar-rounded" style="--avatar-size: 50px; background-color: ' + col + ';">' + txt + '</span>' +
+			'</a>' +
 			'</div>' +
-			'<div style="margin-top: 10px; display: flex; gap: 8px;">' +
-			'<a href="/user/' + esc(u.userslug) + '" class="btn btn-primary" style="flex: 1; font-size: 11px; padding: 6px 8px; text-decoration: none;">View Profile</a>' +
 			'</div>' +
+			'<div class="profile-card-info" style="padding: 15px;">' +
+			'<h1 class="fullname" style="margin: 0 0 5px 0; text-align: center;">' + esc(u.username) + '</h1>' +
+			'<div style="font-size: 12px; color: #666; text-align: center; margin: 5px 0;">📍 ' + esc(loc) + '</div>' +
+			'<div style="font-size: 12px; color: #ff6600; text-align: center; font-weight: 600; margin: 8px 0 12px 0;">' + distStr + '</div>' +
+			'<div class="text-center">' +
+			'<a component="account/follow" href="#" class="btn btn-success btn-sm hide">Follow</a>' +
+			'<a component="account/unfollow" href="#" class="btn btn-warning btn-sm">Unfollow</a>' +
+			'<a component="account/chat" href="#" class="btn btn-primary btn-sm">Chat</a>' +
+			'</div>' +
+			'<div class="account-stats" style="margin-top: 10px;">' +
+			'<div class="stat"><div class="human-readable-number" title="' + (u.reputation || 0) + '">' + (u.reputation || 0) + '</div><span class="stat-label">Reputation</span></div>' +
+			'<div class="stat"><div class="human-readable-number" title="' + (u.postcount || 0) + '">' + (u.postcount || 0) + '</div><span class="stat-label">Posts</span></div>' +
+			'<div class="stat"><div class="human-readable-number" title="' + (u.followerCount || 0) + '">' + (u.followerCount || 0) + '</div><span class="stat-label">Followers</span></div>' +
 			'</div>' +
 			'</div>' +
 			'</div>';
@@ -234,7 +115,6 @@
 	function renderMarkers() {
 		if (!state.map) return;
 		state.markerCluster.clearLayers();
-		state.markerMap = {};
 
 		const bounds = [];
 		if (state.callerLocation && typeof state.callerLocation.latitude === 'number') {
@@ -260,33 +140,27 @@
 			});
 
 			marker.bindTooltip(esc(u.username || ''), { permanent: false });
-			marker.bindPopup(buildNativePopupHtml(u), { maxWidth: 320 });
+			marker.bindPopup(buildNativePopupHtml(u), { maxWidth: 350 });
 			
-			// Click marker to:
-			// 1. Open popup
-			// 2. Highlight card below
 			marker.on('click', function() {
-				// Open popup
 				marker.openPopup();
-
-				// Highlight card below
 				const cardEl = document.getElementById('wg-user-' + u.uid);
 				if (cardEl) {
-					// Remove highlight from all cards
-					document.querySelectorAll('.user-card.wg-highlight').forEach(el => {
-						el.classList.remove('wg-highlight');
+					document.querySelectorAll('[data-wg-highlight]').forEach(el => {
+						el.removeAttribute('data-wg-highlight');
+						el.style.boxShadow = '';
 					});
-					// Add highlight to this card
-					cardEl.classList.add('wg-highlight');
-					// Scroll into view
+					cardEl.setAttribute('data-wg-highlight', 'true');
+					cardEl.style.boxShadow = '0 0 0 3px #0066cc';
 					cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-					// Remove highlight after 3 seconds
-					setTimeout(() => { cardEl.classList.remove('wg-highlight'); }, 3000);
+					setTimeout(() => {
+						cardEl.style.boxShadow = '';
+						cardEl.removeAttribute('data-wg-highlight');
+					}, 3000);
 				}
 			});
 
 			state.markerCluster.addLayer(marker);
-			state.markerMap[u.uid] = marker;
 			bounds.push([lat, lng]);
 		});
 
@@ -377,28 +251,44 @@
 		const txt = (u.username || 'U')[0].toUpperCase();
 		const col = ['#0066cc', '#dc143c', '#ff4500', '#28a745', '#ffc107', '#17a2b8'][u.uid % 6];
 		const distStr = u.distance ? u.distance.toFixed(1) + ' mi away' : 'N/A';
+		const locParts = [];
+		if (u.neighborhood) locParts.push(u.neighborhood);
+		if (u.city) locParts.push(u.city);
+		if (u.state) locParts.push(u.state);
+		const loc = locParts.join(', ') || u.country || '?';
 
-		return '<div id="wg-user-' + u.uid + '" class="user-card">' +
-			'<div class="user-card-image" style="background: ' + col + '; display: flex; align-items: center; justify-content: center;"><span style="font-size: 48px; color: white; font-weight: bold;">' + txt + '</span></div>' +
-			'<div class="user-card-body">' +
-			'<div class="user-picture" style="background: ' + col + ';">' + txt + '</div>' +
-			'<div class="user-info">' +
-			'<h4><a href="/user/' + esc(u.userslug) + '">' + esc(u.username) + '</a></h4>' +
-			'<div class="user-slug">@' + esc(u.userslug) + '</div>' +
-			'<div class="user-status">' + (u.status || 'offline').charAt(0).toUpperCase() + (u.status || 'offline').slice(1) + '</div>' +
-			'<div class="user-location">📍 ' + esc(locStr(u)) + '</div>' +
-			'<div class="user-distance">' + distStr + '</div>' +
-			'<div class="user-stats">' +
-			'<div><span class="stat-value">' + (u.reputation || 0) + '</span><span class="stat-label">Reputation</span></div>' +
-			'<div><span class="stat-value">' + (u.postcount || 0) + '</span><span class="stat-label">Posts</span></div>' +
-			'<div><span class="stat-value">' + (u.followerCount || 0) + '</span><span class="stat-label">Followers</span></div>' +
+		return '<div id="wg-user-' + u.uid + '" class="profile-card-cover-container mb-2">' +
+			'<div class="profile-card-cover rounded-top" style="background-image: url(/assets/images/cover-default.png); background-position: 50% 50%;">' +
+			'<div class="profile-card-avatar"><a href="/user/' + esc(u.userslug) + '"><span title="' + esc(u.username) + '" data-uid="' + u.uid + '" class="avatar avatar-rounded" style="--avatar-size: 50px; background-color: ' + col + ';">' + txt + '</span></a></div>' +
+			'<div class="dropdown card-fab">' +
+			'<button type="button" class="btn btn-light btn-sm rounded-circle fab dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></button>' +
+			'<ul class="dropdown-menu dropdown-menu-end p-1">' +
+			'<li><a class="dropdown-item rounded-1" component="account/chat" href="#">Continue chat with ' + esc(u.username) + '</a></li>' +
+			'<li class="dropdown-divider"></li>' +
+			'<li><a class="dropdown-item rounded-1" href="/user/' + esc(u.userslug) + '">Profile</a></li>' +
+			'<li class="dropdown-divider"></li>' +
+			'<li><a class="dropdown-item rounded-1" href="/user/' + esc(u.userslug) + '/following">Following</a></li>' +
+			'<li><a class="dropdown-item rounded-1" href="/user/' + esc(u.userslug) + '/followers">Followers</a></li>' +
+			'<li class="dropdown-divider"></li>' +
+			'<li><a class="dropdown-item rounded-1" href="/user/' + esc(u.userslug) + '/topics">Topics</a></li>' +
+			'<li><a class="dropdown-item rounded-1" href="/user/' + esc(u.userslug) + '/posts">Posts</a></li>' +
+			'<li><a class="dropdown-item rounded-1" href="/user/' + esc(u.userslug) + '/groups">Groups</a></li>' +
+			'</ul></div></div>' +
+			'<div class="profile-card-info">' +
+			'<h1 class="fullname">' + esc(u.username) + '</h1>' +
+			'<div style="font-size: 12px; color: #666; margin: 5px 0;">📍 ' + esc(loc) + '</div>' +
+			'<div style="font-size: 12px; color: #ff6600; font-weight: 600; margin: 8px 0 12px 0;">' + distStr + '</div>' +
+			'<div class="text-center">' +
+			'<a component="account/follow" href="#" class="btn btn-success btn-sm hide">Follow</a>' +
+			'<a component="account/unfollow" href="#" class="btn btn-warning btn-sm">Unfollow</a>' +
+			'<a component="account/chat" href="#" class="btn btn-primary btn-sm">Chat</a>' +
 			'</div>' +
-			'<div class="user-actions">' +
-			'<a href="/user/' + esc(u.userslug) + '" class="btn btn-primary">View Profile</a>' +
-			'</div>' +
-			'</div>' +
-			'</div>' +
-			'</div>';
+			'<div class="account-stats">' +
+			'<div class="stat"><div class="human-readable-number" title="' + (u.reputation || 0) + '">' + (u.reputation || 0) + '</div><span class="stat-label">Reputation</span></div>' +
+			'<div class="stat"><div class="human-readable-number" title="' + (u.postcount || 0) + '">' + (u.postcount || 0) + '</div><span class="stat-label">Posts</span></div>' +
+			'<div class="stat"><div class="human-readable-number" title="' + (u.followerCount || 0) + '">' + (u.followerCount || 0) + '</div><span class="stat-label">Followers</span></div>' +
+			'</div><div class="text-center profile-meta"></div>' +
+			'</div></div>';
 	}
 
 	function renderCards() {
