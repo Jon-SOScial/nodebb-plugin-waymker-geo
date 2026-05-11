@@ -31,8 +31,59 @@
 
 	<!-- Native Cards Grid -->
 	<h3 id="wg-results-info" style="margin-top: 30px;">Members</h3>
-	<div id="wg-results-grid" style="display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));"></div>
+	<div id="wg-results-grid" style="display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); grid-auto-rows: max-content;"></div>
 </div>
+
+<style>
+	#wg-results-grid {
+		display: grid !important;
+		gap: 20px !important;
+		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
+		grid-auto-rows: max-content !important;
+		width: 100% !important;
+	}
+	.profile-card-cover-container {
+		height: auto !important;
+		display: flex !important;
+		flex-direction: column !important;
+		overflow: visible !important;
+	}
+	.profile-card-cover-container .profile-card-info {
+		display: block !important;
+		height: auto !important;
+		overflow: visible !important;
+	}
+	.profile-card-cover {
+		height: 150px !important;
+		min-height: 150px !important;
+		overflow: visible !important;
+		position: relative !important;
+	}
+	.profile-card-avatar {
+		position: absolute !important;
+		bottom: -25px !important;
+		left: 15px !important;
+		z-index: 10 !important;
+	}
+	.card-fab {
+		position: absolute !important;
+		top: 10px !important;
+		right: 10px !important;
+		z-index: 11 !important;
+	}
+	.account-stats {
+		display: flex !important;
+		gap: 15px !important;
+		text-align: center !important;
+		margin-top: 10px !important;
+		padding-top: 10px !important;
+		border-top: 1px solid #f0f0f0 !important;
+	}
+	.account-stats .stat {
+		flex: 1 !important;
+		font-size: 12px !important;
+	}
+</style>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -87,14 +138,14 @@
 		const loc = locParts.join(', ') || u.country || '?';
 
 		return '<div class="profile-card-cover-container mb-2" style="max-width: 320px; border: 1px solid #e9ecef; border-radius: 4px;">' +
-			'<div class="profile-card-cover rounded-top" style="background-image: url(/assets/images/cover-default.png); background-position: 50% 50%; height: 100px; position: relative;">' +
+			'<div class="profile-card-cover rounded-top" style="background-image: url(/assets/images/cover-default.png); background-position: 50% 50%; height: auto; min-height: 100px; position: relative;">' +
 			'<div class="profile-card-avatar">' +
 			'<a href="/user/' + esc(u.userslug) + '">' +
 			'<span title="' + esc(u.username) + '" data-uid="' + u.uid + '" class="avatar avatar-rounded" style="--avatar-size: 50px; background-color: ' + col + ';">' + txt + '</span>' +
 			'</a>' +
 			'</div>' +
 			'</div>' +
-			'<div class="profile-card-info" style="padding: 15px;">' +
+			'<div class="profile-card-info" style="padding: 15px; padding-top: 50px;">' +
 			'<h1 class="fullname" style="margin: 0 0 5px 0; text-align: center;">' + esc(u.username) + '</h1>' +
 			'<div style="font-size: 12px; color: #666; text-align: center; margin: 5px 0;">📍 ' + esc(loc) + '</div>' +
 			'<div style="font-size: 12px; color: #ff6600; text-align: center; font-weight: 600; margin: 8px 0 12px 0;">' + distStr + '</div>' +
@@ -258,7 +309,7 @@
 		const loc = locParts.join(', ') || u.country || '?';
 
 		return '<div id="wg-user-' + u.uid + '" class="profile-card-cover-container mb-2">' +
-			'<div class="profile-card-cover rounded-top" style="background-image: url(/assets/images/cover-default.png); background-position: 50% 50%;">' +
+			'<div class="profile-card-cover rounded-top" style="background-image: url(/assets/images/cover-default.png); background-position: 50% 50%; height: auto; min-height: 150px; position: relative;">' +
 			'<div class="profile-card-avatar"><a href="/user/' + esc(u.userslug) + '"><span title="' + esc(u.username) + '" data-uid="' + u.uid + '" class="avatar avatar-rounded" style="--avatar-size: 50px; background-color: ' + col + ';">' + txt + '</span></a></div>' +
 			'<div class="dropdown card-fab">' +
 			'<button type="button" class="btn btn-light btn-sm rounded-circle fab dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></button>' +
@@ -274,8 +325,8 @@
 			'<li><a class="dropdown-item rounded-1" href="/user/' + esc(u.userslug) + '/posts">Posts</a></li>' +
 			'<li><a class="dropdown-item rounded-1" href="/user/' + esc(u.userslug) + '/groups">Groups</a></li>' +
 			'</ul></div></div>' +
-			'<div class="profile-card-info">' +
-			'<h1 class="fullname">' + esc(u.username) + '</h1>' +
+			'<div class="profile-card-info" style="padding: 15px; padding-top: 50px;">' +
+			'<h1 class="fullname" style="margin: 0 0 5px 0;">' + esc(u.username) + '</h1>' +
 			'<div style="font-size: 12px; color: #666; margin: 5px 0;">📍 ' + esc(loc) + '</div>' +
 			'<div style="font-size: 12px; color: #ff6600; font-weight: 600; margin: 8px 0 12px 0;">' + distStr + '</div>' +
 			'<div class="text-center">' +
