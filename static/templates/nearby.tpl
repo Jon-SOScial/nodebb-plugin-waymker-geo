@@ -587,12 +587,16 @@
 		padding: 0;
 	}
 	.leaflet-popup.wg-marker-popup .leaflet-popup-content {
-		margin: 14px 12px;
+		margin: 0 !important;
+		width: auto !important;
 		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 		line-height: 1.3;
 	}
 	.wg-popup-card {
 		min-width: 300px;
+		padding: 16px;
+		display: flex;
+		flex-direction: column;
 	}
 	.wg-popup-top {
 		display: flex;
@@ -623,8 +627,8 @@
 	}
 	.wg-popup-card .wg-stat-num { font-size: 13px; font-weight: 700; }
 	.wg-popup-card .wg-stat-label { font-size: 9px; }
-	.wg-popup-card .wg-actions { margin-top: 10px; gap: 4px; }
-	.wg-popup-card .wg-action-btn { padding: 7px 10px; font-size: 11px; flex: 1; }
+	.wg-popup-card .wg-actions { margin-top: 12px; gap: 4px; }
+	.wg-popup-card .wg-action-btn { padding: 8px 10px; font-size: 11px; flex: 1; }
 
 	/* ---------- Responsive ---------- */
 	@media (max-width: 768px) {
