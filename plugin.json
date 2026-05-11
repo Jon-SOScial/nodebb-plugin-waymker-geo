@@ -16,6 +16,9 @@
     "static/lib/admin-groups.js"
   ],
   "modules": {
+	"scripts": [
+		"static/lib/nearby.js"
+	],
     "../admin/plugins/waymker-geo.js": "static/lib/admin.js",
     "../admin/plugins/waymker-geo/groups.js": "static/lib/admin-groups.js"
   },
