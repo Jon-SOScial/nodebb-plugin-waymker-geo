@@ -10,5 +10,6 @@
 	],
 	"scripts": [
 		"static/lib/nearby.js"
-	]
+	],
+	"templates": "static/templates"
 }
