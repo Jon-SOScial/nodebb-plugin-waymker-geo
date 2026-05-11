@@ -762,10 +762,31 @@
 		fetchUsers();
 	}
 
+	// Run init on initial page load
 	if (document.readyState === 'loading') {
 		document.addEventListener('DOMContentLoaded', init);
 	} else {
 		init();
+	}
+
+	// CRITICAL: NodeBB is an SPA - hook into ajaxify events for back/forward navigation
+	// This ensures init runs every time the user navigates to /directory/nearby
+	if (typeof $ !== 'undefined' && $(window).off) {
+		// Remove any previous listeners to prevent duplicates
+		$(window).off('action:ajaxify.end.waymkerGeo');
+		$(window).on('action:ajaxify.end.waymkerGeo', function(ev, data) {
+			// Only re-init if we're on the nearby page
+			if (data && data.url && data.url.indexOf('directory/nearby') !== -1) {
+				console.log('[waymker-geo] ajaxify.end detected on nearby page, re-initializing');
+				// Wait a tick for DOM to settle, then init
+				setTimeout(function() {
+					if (document.getElementById('wg-map')) {
+						init();
+					}
+				}, 50);
+			}
+		});
+		console.log('[waymker-geo] Registered ajaxify.end listener for SPA navigation');
 	}
 })();
 </script>
