@@ -503,15 +503,15 @@
 			if (boundsSize < 100) {
 				// Markers are all in the same spot (within 100m) - use fixed zoom
 				var center = boundsObj.getCenter();
-				state.map.setView(center, 13);
+				state.map.setView(center, 13, { animate: false });
 				console.log('[waymker-geo] Markers at same location, set zoom to 13');
 			} else {
 				// Markers spread out - fit bounds
-				try { state.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 }); } catch (e) {}
+				try { state.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15, animate: false }); } catch (e) {}
 			}
 		} else if (bounds.length === 1) {
 			// Single marker - zoom to that location
-			state.map.setView(bounds[0], 13);
+			state.map.setView(bounds[0], 13, { animate: false });
 		}
 		
 		var markerCount = Object.keys(state.markerMap).length;
