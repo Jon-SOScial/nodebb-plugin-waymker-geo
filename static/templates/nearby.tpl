@@ -368,7 +368,7 @@
 	}
 
 	function init() {
-		if (typeof L === 'undefined' || !L.map || !L.markerClusterGroup) { setTimeout(init, 200); return; }
+		if (typeof L === 'undefined' || typeof L.map === 'undefined' || typeof L.markerClusterGroup === 'undefined') { setTimeout(init, 200); return; }
 		if (state.initialized) cleanup();
 		state.initialized = true;
 		state.initId++;
