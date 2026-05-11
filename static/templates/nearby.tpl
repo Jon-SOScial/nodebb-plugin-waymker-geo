@@ -736,6 +736,13 @@
 	}
 
 	function init() {
+		// Verify Leaflet is loaded - it's loaded via inline script tags which may not be ready
+		if (typeof L === 'undefined' || !L.map || !L.markerClusterGroup) {
+			console.warn('[waymker-geo] Leaflet not ready yet, retrying in 200ms');
+			setTimeout(init, 200);
+			return;
+		}
+
 		// Prevent double-initialization - if already initialized, cleanup and restart
 		if (state.initialized) {
 			console.log('[waymker-geo] Already initialized, cleaning up and restarting...');
@@ -771,22 +778,41 @@
 
 	// CRITICAL: NodeBB is an SPA - hook into ajaxify events for back/forward navigation
 	// This ensures init runs every time the user navigates to /directory/nearby
-	if (typeof $ !== 'undefined' && $(window).off) {
-		// Remove any previous listeners to prevent duplicates
-		$(window).off('action:ajaxify.end.waymkerGeo');
-		$(window).on('action:ajaxify.end.waymkerGeo', function(ev, data) {
-			// Only re-init if we're on the nearby page
-			if (data && data.url && data.url.indexOf('directory/nearby') !== -1) {
-				console.log('[waymker-geo] ajaxify.end detected on nearby page, re-initializing');
-				// Wait a tick for DOM to settle, then init
-				setTimeout(function() {
-					if (document.getElementById('wg-map')) {
-						init();
+	function registerAjaxifyHook() {
+		if (typeof window.$ === 'function' && window.$.fn) {
+			try {
+				// Remove any previous listeners to prevent duplicates
+				window.$(window).off('action:ajaxify.end.waymkerGeo');
+				window.$(window).on('action:ajaxify.end.waymkerGeo', function(ev, data) {
+					if (data && data.url && data.url.indexOf('directory/nearby') !== -1) {
+						console.log('[waymker-geo] ajaxify.end detected on nearby page, re-initializing');
+						setTimeout(function() {
+							if (document.getElementById('wg-map')) {
+								init();
+							}
+						}, 50);
 					}
-				}, 50);
+				});
+				console.log('[waymker-geo] Registered ajaxify.end listener for SPA navigation');
+				return true;
+			} catch (e) {
+				console.warn('[waymker-geo] Failed to register ajaxify hook:', e.message);
+				return false;
 			}
-		});
-		console.log('[waymker-geo] Registered ajaxify.end listener for SPA navigation');
+		}
+		return false;
+	}
+
+	// Try to register immediately, or wait for jQuery to be available
+	if (!registerAjaxifyHook()) {
+		console.log('[waymker-geo] jQuery not ready, will retry...');
+		var retryCount = 0;
+		var retryInterval = setInterval(function() {
+			retryCount++;
+			if (registerAjaxifyHook() || retryCount > 20) {
+				clearInterval(retryInterval);
+			}
+		}, 100);
 	}
 })();
 </script>
