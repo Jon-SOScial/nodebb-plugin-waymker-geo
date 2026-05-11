@@ -249,17 +249,36 @@
 
 	function cleanup() {
 		console.log('[waymker-geo] Cleaning up...');
+		// Clear all pending timeouts
 		state.pendingTimeouts.forEach(clearTimeout);
 		state.pendingTimeouts = [];
+		// Clear search timer
+		if (state.searchTimer) clearTimeout(state.searchTimer);
+		// Remove map and all layers
+		if (state.markerCluster) {
+			try { state.markerCluster.clearLayers(); } catch (e) {}
+			state.markerCluster = null;
+		}
 		if (state.map) {
-			state.map.remove();
+			try { state.map.remove(); } catch (e) {}
 			state.map = null;
 		}
+		// Reset all state
+		state.markerMap = {};
+		state.allUsers = [];
+		state.filteredUsers = [];
+		state.groupsList = [];
+		state.callerLocation = null;
+		state.isPrivileged = false;
 		state.initialized = false;
 	}
 
+	// Cleanup on page unload/hide
 	window.addEventListener('beforeunload', cleanup);
 	window.addEventListener('pagehide', cleanup);
+	
+	// Also cleanup immediately when page is first loaded in case old instance is lingering
+	cleanup();
 
 	function $(id) { return document.getElementById(id); }
 	function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
@@ -644,10 +663,10 @@
 	}
 
 	function init() {
-		// Prevent double-initialization
+		// Prevent double-initialization - if already initialized, cleanup and restart
 		if (state.initialized) {
-			console.log('[waymker-geo] Already initialized, skipping...');
-			return;
+			console.log('[waymker-geo] Already initialized, cleaning up and restarting...');
+			cleanup();
 		}
 		state.initialized = true;
 
