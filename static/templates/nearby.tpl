@@ -245,6 +245,7 @@
 		markerMap: {},
 		initialized: false,
 		pendingTimeouts: [],
+		initId: 0,  // Track which init is current
 	};
 
 	function cleanup() {
@@ -521,6 +522,9 @@
 	}
 
 	function fetchUsers() {
+		// ← CRITICAL: Capture current initId to guard against stale async callbacks
+		var fetchInitId = state.initId;
+		console.log('[waymker-geo] fetchUsers starting, initId: ' + fetchInitId);
 		var params = ['radius=99999', 'limit=10000'];
 		if ($('wg-role').value) params.push('roles=' + encodeURIComponent($('wg-role').value));
 		if ($('wg-group').value) params.push('group=' + encodeURIComponent($('wg-group').value));
@@ -535,6 +539,11 @@
 				return r.json();
 			})
 			.then(function(data) {
+				// ← CRITICAL: Check if this fetch is stale before updating state
+				if (state.initId !== fetchInitId) {
+					console.log('[waymker-geo] Stale fetch result (initId mismatch), ignoring. Current: ' + state.initId + ', Fetch: ' + fetchInitId);
+					return;
+				}
 				console.log('[waymker-geo] Data received:', data);
 				if (!data || !data.users) {
 					throw new Error('Invalid response structure: missing users array');
@@ -556,6 +565,11 @@
 				fetchGroups();
 			})
 			.catch(function(err) {
+				// ← CRITICAL: Check initId before showing error
+				if (state.initId !== fetchInitId) {
+					console.log('[waymker-geo] Stale error from old fetch, ignoring');
+					return;
+				}
 				console.error('[waymker-geo] Fetch failed:', err);
 				$('wg-results-grid').innerHTML = 
 					'<div class="alert alert-danger" style="grid-column: 1 / -1;">' +
@@ -749,6 +763,8 @@
 			cleanup();
 		}
 		state.initialized = true;
+		state.initId++;  // ← INCREMENT INIT ID FOR THIS INIT
+		console.log('[waymker-geo] init() starting, initId: ' + state.initId);
 
 		initMap();
 
