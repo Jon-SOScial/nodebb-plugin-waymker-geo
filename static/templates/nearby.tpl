@@ -44,6 +44,44 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.js"></script>
 
 <style>
+	/* ============================================================
+	   CRITICAL: Prevent Bootstrap/theme img rules from squashing
+	   Leaflet tiles. Without this, tiles render at 0px height.
+	   ============================================================ */
+	#wg-map img.leaflet-tile,
+	#wg-map .leaflet-container img,
+	.leaflet-container img.leaflet-tile,
+	.leaflet-tile {
+		max-width: none !important;
+		max-height: none !important;
+		width: 256px !important;
+		height: 256px !important;
+	}
+	.leaflet-container img {
+		max-width: none !important;
+	}
+	.leaflet-pane,
+	.leaflet-tile,
+	.leaflet-marker-icon,
+	.leaflet-marker-shadow,
+	.leaflet-tile-container,
+	.leaflet-pane > svg,
+	.leaflet-pane > canvas,
+	.leaflet-zoom-box,
+	.leaflet-image-layer,
+	.leaflet-layer {
+		position: absolute !important;
+		left: 0 !important;
+		top: 0 !important;
+	}
+	.leaflet-container {
+		overflow: hidden !important;
+	}
+	.leaflet-marker-icon,
+	.leaflet-marker-shadow {
+		max-width: none !important;
+	}
+
 	.wg-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -258,13 +296,18 @@
 		});
 		state.map.addLayer(state.markerCluster);
 
-		// CRITICAL: invalidate size after the map element is fully laid out
-		setTimeout(function() {
+		// CRITICAL: invalidate size multiple times to handle late layout
+		[100, 300, 600, 1200, 2000].forEach(function(ms) {
+			setTimeout(function() {
+				if (state.map) state.map.invalidateSize();
+			}, ms);
+		});
+		window.addEventListener('load', function() {
 			if (state.map) state.map.invalidateSize();
-		}, 100);
-		setTimeout(function() {
+		});
+		window.addEventListener('resize', function() {
 			if (state.map) state.map.invalidateSize();
-		}, 500);
+		});
 	}
 
 	function renderMarkers() {
