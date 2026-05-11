@@ -1188,9 +1188,11 @@
 	function followUser(uid, btn) {
 		var alreadyFollowing = state.followingSet[uid];
 		var endpoint = '/api/v3/users/' + uid + '/follow';
-		var method = alreadyFollowing ? 'DELETE' : 'POST';
+		// Both follow and unfollow use PUT; NodeBB determines action based on current state
+		var method = 'PUT';
 
 		btn.disabled = true;
+		console.log('[waymker-geo] followUser: PUT ' + endpoint);
 		fetch(endpoint, {
 			method: method,
 			credentials: 'same-origin',
@@ -1202,11 +1204,12 @@
 		})
 			.then(function (r) {
 				btn.disabled = false;
+				console.log('[waymker-geo] follow response status:', r.status);
 				if (r.ok) {
 					state.followingSet[uid] = !alreadyFollowing;
 					if (state.followingSet[uid]) {
 						btn.classList.add('following');
-						btn.textContent = '✓ Following';
+						btn.textContent = '\u2713 Following';
 					} else {
 						btn.classList.remove('following');
 						btn.textContent = '+ Follow';
@@ -1215,8 +1218,9 @@
 					app.alertError('Could not update follow status.');
 				}
 			})
-			.catch(function () {
+			.catch(function (err) {
 				btn.disabled = false;
+				console.error('[waymker-geo] follow fetch error:', err);
 				if (typeof app !== 'undefined' && app.alertError) {
 					app.alertError('Network error.');
 				}
@@ -1230,45 +1234,49 @@
 		}
 		
 		console.log('[waymker-geo] startChat called with uid:', uid);
-		console.log('[waymker-geo] app.newChat available?', typeof app !== 'undefined' && typeof app.newChat === 'function');
-		console.log('[waymker-geo] socket available?', typeof socket !== 'undefined');
-		
-		// NodeBB v4's app.newChat accepts a uid (number). Username doesn't work.
-		if (typeof app !== 'undefined' && typeof app.newChat === 'function') {
-			try { 
-				console.log('[waymker-geo] attempting app.newChat(' + uid + ')');
-				app.newChat(parseInt(uid, 10)); 
-				console.log('[waymker-geo] app.newChat succeeded');
-				return; 
-			} catch (e) { 
-				console.error('[waymker-geo] app.newChat failed:', e.message);
-				/* fall through */ 
-			}
-		}
-		
-		// Socket fallback: create/open a room with this uid, then route to it.
-		if (typeof socket !== 'undefined' && socket.emit) {
-			console.log('[waymker-geo] attempting socket.emit(modules.chats.newRoom, touid=' + uid + ')');
-			socket.emit('modules.chats.newRoom', { touid: parseInt(uid, 10) }, function (err, roomId) {
-				if (err) {
-					console.error('[waymker-geo] socket newRoom failed:', err);
-					window.location.href = '/chats';
+		console.log('[waymker-geo] attempting POST /api/v3/chats with uids=[' + uid + ']');
+
+		// Modern NodeBB v4 way: POST to /api/v3/chats with uids array
+		fetch('/api/v3/chats', {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json',
+				'x-csrf-token': getCSRF(),
+			},
+			body: JSON.stringify({ uids: [parseInt(uid, 10)] }),
+		})
+			.then(function (r) {
+				console.log('[waymker-geo] POST /api/v3/chats response status:', r.status);
+				if (!r.ok) {
+					console.error('[waymker-geo] POST /api/v3/chats failed with status', r.status);
+					if (typeof app !== 'undefined' && app.alertError) {
+						app.alertError('Could not open chat.');
+					}
 					return;
 				}
+				return r.json();
+			})
+			.then(function (data) {
+				if (!data) return; // error case already handled
+				var roomId = (data && data.response && data.response.roomId) ? data.response.roomId : null;
 				if (!roomId) {
-					console.warn('[waymker-geo] socket newRoom returned no roomId');
-					window.location.href = '/chats';
+					console.warn('[waymker-geo] POST /api/v3/chats returned no roomId, full response:', data);
+					if (typeof app !== 'undefined' && app.alertError) {
+						app.alertError('Could not create chat room.');
+					}
 					return;
 				}
-				console.log('[waymker-geo] socket newRoom succeeded, roomId:', roomId);
+				console.log('[waymker-geo] chat room opened, roomId:', roomId);
 				window.location.href = '/chats/' + roomId;
+			})
+			.catch(function (err) {
+				console.error('[waymker-geo] startChat fetch error:', err);
+				if (typeof app !== 'undefined' && app.alertError) {
+					app.alertError('Network error opening chat.');
+				}
 			});
-			return;
-		}
-		
-		// Last resort
-		console.log('[waymker-geo] falling back to /chats (no app.newChat or socket)');
-		window.location.href = '/chats';
 	}
 
 	// ============================================================
