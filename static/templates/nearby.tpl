@@ -592,7 +592,7 @@
 		line-height: 1.3;
 	}
 	.wg-popup-card {
-		min-width: 280px;
+		min-width: 300px;
 	}
 	.wg-popup-top {
 		display: flex;
@@ -1118,7 +1118,7 @@
 			});
 
 			marker.bindPopup(buildPopupHtml(u), {
-				maxWidth: 280, minWidth: 240, className: 'wg-marker-popup', closeButton: true,
+				maxWidth: 320, minWidth: 300, className: 'wg-marker-popup', closeButton: true,
 			});
 
 			// Wire popup action buttons each time the popup opens
