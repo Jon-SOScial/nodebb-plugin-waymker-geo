@@ -1331,10 +1331,10 @@
 				e.stopPropagation();
 				var fuid = parseInt(followBtn.getAttribute('data-follow-uid'), 10);
 				followUser(fuid, followBtn);
-				// Also sync to popup if it's open for this user
+				// Also sync to popup if it's open for this user (only if UID matches)
 				setTimeout(function () {
 					var popupFollow = document.querySelector('.leaflet-popup [data-popup-follow]');
-					if (popupFollow) {
+					if (popupFollow && parseInt(popupFollow.getAttribute('data-follow-uid'), 10) === fuid) {
 						popupFollow.textContent = state.followingSet[fuid] ? '\u2713 Following' : '+ Follow';
 						popupFollow.classList.toggle('following', state.followingSet[fuid]);
 					}
