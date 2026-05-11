@@ -243,6 +243,7 @@
 		map: null,
 		markerCluster: null,
 		markerMap: {},
+		initialized: false,
 	};
 
 	function $(id) { return document.getElementById(id); }
@@ -408,10 +409,20 @@
 		if ($('wg-role').value) params.push('roles=' + encodeURIComponent($('wg-role').value));
 		if ($('wg-group').value) params.push('group=' + encodeURIComponent($('wg-group').value));
 
-		return fetch('/api/v3/plugins/waymker-geo/users-near-me?' + params.join('&'),
-			{ credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
-			.then(function(r) { return r.json(); })
+		var url = '/api/v3/plugins/waymker-geo/users-near-me?' + params.join('&');
+		console.log('[waymker-geo] Fetching:', url);
+
+		return fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+			.then(function(r) {
+				console.log('[waymker-geo] Response status:', r.status);
+				if (!r.ok) throw new Error('API returned ' + r.status);
+				return r.json();
+			})
 			.then(function(data) {
+				console.log('[waymker-geo] Data received:', data);
+				if (!data || !data.users) {
+					throw new Error('Invalid response structure: missing users array');
+				}
 				state.allUsers = data.users || [];
 				state.callerLocation = data.callerLocation || null;
 				state.isPrivileged = !!data.isPrivileged;
@@ -429,8 +440,12 @@
 				fetchGroups();
 			})
 			.catch(function(err) {
-				console.error('[waymker-geo] fetch failed', err);
-				$('wg-results-grid').innerHTML = '<div class="alert alert-danger">Could not load nearby members.</div>';
+				console.error('[waymker-geo] Fetch failed:', err);
+				$('wg-results-grid').innerHTML = 
+					'<div class="alert alert-danger" style="grid-column: 1 / -1;">' +
+					'<strong>Error loading members:</strong> ' + esc(err.message) + '<br/>' +
+					'<small style="opacity: 0.7;">Check browser console for details. Try <a href="#" onclick="location.reload(); return false;">refreshing the page</a>.</small>' +
+					'</div>';
 			});
 	}
 
@@ -589,6 +604,13 @@
 	}
 
 	function init() {
+		// Prevent double-initialization
+		if (state.initialized) {
+			console.log('[waymker-geo] Already initialized, skipping...');
+			return;
+		}
+		state.initialized = true;
+
 		initMap();
 
 		$('wg-role').addEventListener('change', fetchUsers);
