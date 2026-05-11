@@ -281,7 +281,15 @@
 
 	function initMap() {
 		state.map = L.map('wg-map').setView([39.5, -98.35], 4);
-		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+
+		// CRITICAL: Build tile URL at runtime using hex escapes for { and }
+		// Dust.js (NodeBB's template engine) strips literal {s}/{z}/{x}/{y}
+		// from .tpl files, producing broken URLs like 'https://.tile.osm.org///.png'
+		var lb = '\x7b', rb = '\x7d';
+		var tileUrl = 'https://' + lb + 's' + rb + '.tile.openstreetmap.org/' +
+			lb + 'z' + rb + '/' + lb + 'x' + rb + '/' + lb + 'y' + rb + '.png';
+
+		L.tileLayer(tileUrl, {
 			maxZoom: 19,
 			attribution: '© OpenStreetMap'
 		}).addTo(state.map);
