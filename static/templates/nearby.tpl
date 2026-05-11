@@ -315,7 +315,15 @@
 	}
 
 	function initMap() {
+		var container = document.getElementById('wg-map');
+		if (!container) {
+			console.error('[waymker-geo] Map container #wg-map not found!');
+			return;
+		}
+		console.log('[waymker-geo] initMap: container found, size: ' + container.offsetWidth + 'x' + container.offsetHeight);
+		
 		state.map = L.map('wg-map').setView([39.5, -98.35], 4);
+		console.log('[waymker-geo] Leaflet map created');
 
 		// CRITICAL: Build tile URL at runtime using hex escapes for { and }
 		// Dust.js (NodeBB's template engine) strips literal {s}/{z}/{x}/{y}
@@ -463,7 +471,10 @@
 			try { state.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 }); } catch (e) {}
 		}
 		
-		console.log('[waymker-geo] renderMarkers complete, ' + state.markerMap.length + ' markers rendered');
+		var markerCount = Object.keys(state.markerMap).length;
+		var mapContainer = document.getElementById('wg-map');
+		var mapVisible = mapContainer ? (mapContainer.offsetHeight > 0 && mapContainer.offsetWidth > 0) : false;
+		console.log('[waymker-geo] renderMarkers complete: ' + markerCount + ' markers, map container visible: ' + mapVisible + ', size: ' + (mapContainer ? mapContainer.offsetWidth + 'x' + mapContainer.offsetHeight : 'N/A'));
 	}
 
 	function fetchUsers() {
