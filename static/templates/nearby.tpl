@@ -356,8 +356,19 @@
 	}
 
 	function renderMarkers() {
-		if (!state.map || !state.markerCluster) return;
-		state.markerCluster.clearLayers();
+		console.log('[waymker-geo] renderMarkers called, map:', !!state.map, 'cluster:', !!state.markerCluster, 'users:', state.filteredUsers.length);
+		
+		if (!state.map || !state.markerCluster) {
+			console.warn('[waymker-geo] Map or cluster not ready, deferring...');
+			return;
+		}
+		
+		// Clear existing markers
+		try {
+			state.markerCluster.clearLayers();
+		} catch (e) {
+			console.warn('[waymker-geo] Error clearing layers:', e.message);
+		}
 		state.markerMap = {};
 
 		var bounds = [];
@@ -435,16 +446,24 @@
 			bounds.push([lat, lng]);
 		});
 
-		// Only add markerCluster to map if it's not already added
+		// Ensure markerCluster is added to the map
 		if (!state.map.hasLayer(state.markerCluster)) {
+			console.log('[waymker-geo] Adding markerCluster to map');
 			state.map.whenReady(function() {
-				state.map.addLayer(state.markerCluster);
+				if (!state.map.hasLayer(state.markerCluster)) {
+					state.map.addLayer(state.markerCluster);
+					console.log('[waymker-geo] MarkerCluster added after map ready');
+				}
 			});
+		} else {
+			console.log('[waymker-geo] MarkerCluster already on map');
 		}
 
 		if (bounds.length > 1) {
 			try { state.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 }); } catch (e) {}
 		}
+		
+		console.log('[waymker-geo] renderMarkers complete, ' + state.markerMap.length + ' markers rendered');
 	}
 
 	function fetchUsers() {
