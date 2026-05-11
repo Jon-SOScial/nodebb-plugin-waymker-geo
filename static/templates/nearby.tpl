@@ -559,6 +559,33 @@
 		var html = '';
 		state.filteredUsers.forEach(function(u) { html += buildCardHtml(u); });
 		grid.innerHTML = html;
+
+		// Add click handlers to cards to center map on marker
+		grid.addEventListener('click', function(e) {
+			var card = e.target.closest('.wg-card');
+			if (!card) return;
+			var uid = parseInt(card.getAttribute('data-uid'), 10);
+			if (!uid || !state.markerMap[uid]) return;
+
+			var marker = state.markerMap[uid];
+			var latlng = marker.getLatLng();
+
+			// Center map on this marker
+			state.map.flyTo(latlng, 13, { duration: 0.8 });
+
+			// Highlight the card
+			document.querySelectorAll('.wg-card.wg-highlight').forEach(function(el) {
+				el.classList.remove('wg-highlight');
+			});
+			card.classList.add('wg-highlight');
+			setTimeout(function() { card.classList.remove('wg-highlight'); }, 2000);
+
+			// Scroll map into view if needed
+			var mapEl = document.querySelector('#wg-map');
+			if (mapEl && mapEl.getBoundingClientRect().top < 0) {
+				mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			}
+		});
 	}
 
 	function init() {
