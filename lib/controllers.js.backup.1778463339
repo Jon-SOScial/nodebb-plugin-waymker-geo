@@ -90,21 +90,6 @@ exports.getSettings = async function (req, res) {
 	const settings2 = await meta.settings.get('waymker-geo');
 	const settings = settings1 && Object.keys(settings1).length > 0 ? settings1 : settings2;
 
-	// Add 'following' field to each user object
-	const callerUid = req.uid || 0;
-	if (callerUid) {
-		const db = require.main.require('./database');
-		for (const user of users) {
-			try {
-				user.following = await db.isSortedSetMember(`uid:${user.uid}:followers`, callerUid);
-			} catch (err) {
-				user.following = false;
-			}
-		}
-	} else {
-		users.forEach(u => { u.following = false; });
-	}
-
 	res.json({
 		mapboxToken: settings.mapboxToken || '',
 		geocoderCountry: settings.geocoderCountry || '',

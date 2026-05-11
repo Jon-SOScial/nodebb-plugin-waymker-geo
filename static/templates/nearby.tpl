@@ -85,7 +85,7 @@
 <script>
 (function() {
 	'use strict';
-	const state = {
+	const state = window.waymkerGeoState = {
 		allUsers: [],
 		filteredUsers: [],
 		groupsList: [],
@@ -419,4 +419,15 @@
 		}, 100);
 	}
 })();
+</script>
+
+<script>
+// Ensure Leaflet is loaded before initializing
+setTimeout(function() {
+	if (typeof L !== 'undefined' && typeof state !== 'undefined' && state.map) {
+		console.log('[waymker-geo] Post-load size validation');
+		state.map.invalidateSize();
+		renderMarkers();
+	}
+}, 500);
 </script>
