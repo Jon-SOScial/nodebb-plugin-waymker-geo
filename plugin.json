@@ -5,12 +5,10 @@
 	"url": "https://github.com/Jon-SOScial/nodebb-plugin-waymker-geo",
 	"library": "./library.js",
 	"hooks": [
+		{ "hook": "static:app.load", "method": "init" },
 		{ "hook": "static:app.load", "method": "loadGeoFeatures" }
 	],
 	"scripts": [
 		"static/lib/nearby.js"
-	],
-	"css": [
-		"static/styles.css"
 	]
 }

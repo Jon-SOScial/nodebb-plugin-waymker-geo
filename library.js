@@ -2,6 +2,20 @@
 
 const plugin = {};
 
+plugin.init = function(params, callback) {
+	const app = params.app;
+	const controllers = params.controllers;
+	
+	// Register the /directory/nearby route
+	app.get('/directory/nearby', plugin.nearbyController);
+	
+	callback();
+};
+
+plugin.nearbyController = function(req, res) {
+	res.render('plugins/nodebb-plugin-waymker-geo/nearby');
+};
+
 plugin.loadGeoFeatures = function(data, callback) {
 	// Inject Leaflet and MarkerCluster into the header so they load once globally
 	const leafletCSS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
@@ -10,22 +24,23 @@ plugin.loadGeoFeatures = function(data, callback) {
 	const leafletJS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
 	const leafletMarkerJS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.js';
 
-	// Add CSS links to header
 	data.scripts = data.scripts || [];
+	
+	// Add CSS
 	data.scripts.push({
 		src: leafletCSS,
-		link: true,
+		attribute: 'rel="stylesheet"',
 	});
 	data.scripts.push({
 		src: leafletMarkerCSS,
-		link: true,
+		attribute: 'rel="stylesheet"',
 	});
 	data.scripts.push({
 		src: leafletMarkerDefaultCSS,
-		link: true,
+		attribute: 'rel="stylesheet"',
 	});
 
-	// Add JS scripts to header
+	// Add JS (async: false ensures they load in order before our plugin code)
 	data.scripts.push({
 		src: leafletJS,
 		async: false,
