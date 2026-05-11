@@ -244,7 +244,22 @@
 		markerCluster: null,
 		markerMap: {},
 		initialized: false,
+		pendingTimeouts: [],
 	};
+
+	function cleanup() {
+		console.log('[waymker-geo] Cleaning up...');
+		state.pendingTimeouts.forEach(clearTimeout);
+		state.pendingTimeouts = [];
+		if (state.map) {
+			state.map.remove();
+			state.map = null;
+		}
+		state.initialized = false;
+	}
+
+	window.addEventListener('beforeunload', cleanup);
+	window.addEventListener('pagehide', cleanup);
 
 	function $(id) { return document.getElementById(id); }
 	function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
@@ -295,6 +310,7 @@
 			attribution: '© OpenStreetMap'
 		}).addTo(state.map);
 
+		// Don't add empty markerCluster yet - wait for renderMarkers() to populate it
 		state.markerCluster = L.markerClusterGroup({
 			iconCreateFunction: function(cluster) {
 				var n = cluster.getChildCount();
@@ -303,13 +319,14 @@
 				return L.divIcon({ html: html, className: 'marker-cluster', iconSize: L.point(36, 36) });
 			}
 		});
-		state.map.addLayer(state.markerCluster);
+		// Will be added in renderMarkers() after map is ready
 
 		// CRITICAL: invalidate size multiple times to handle late layout
 		[100, 300, 600, 1200, 2000].forEach(function(ms) {
-			setTimeout(function() {
+			var id = setTimeout(function() {
 				if (state.map) state.map.invalidateSize();
 			}, ms);
+			state.pendingTimeouts.push(id);
 		});
 		window.addEventListener('load', function() {
 			if (state.map) state.map.invalidateSize();
@@ -398,6 +415,13 @@
 			state.markerMap[u.uid] = marker;
 			bounds.push([lat, lng]);
 		});
+
+		// Only add markerCluster to map if it's not already added
+		if (!state.map.hasLayer(state.markerCluster)) {
+			state.map.whenReady(function() {
+				state.map.addLayer(state.markerCluster);
+			});
+		}
 
 		if (bounds.length > 1) {
 			try { state.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 }); } catch (e) {}
@@ -634,6 +658,7 @@
 		$('wg-search').addEventListener('input', function() {
 			clearTimeout(state.searchTimer);
 			state.searchTimer = setTimeout(applyFilters, 200);
+			state.pendingTimeouts.push(state.searchTimer);
 		});
 		$('wg-reset').addEventListener('click', function() {
 			$('wg-search').value = '';
