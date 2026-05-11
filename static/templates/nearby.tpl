@@ -587,12 +587,12 @@
 		padding: 0;
 	}
 	.leaflet-popup.wg-marker-popup .leaflet-popup-content {
-		margin: 12px 14px;
+		margin: 10px 12px;
 		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-		line-height: 1.35;
+		line-height: 1.3;
 	}
 	.wg-popup-card {
-		min-width: 220px;
+		min-width: 280px;
 	}
 	.wg-popup-top {
 		display: flex;
@@ -600,9 +600,10 @@
 		align-items: flex-start;
 	}
 	.wg-popup-avatar {
-		width: 40px;
-		height: 40px;
+		width: 44px;
+		height: 44px;
 		font-size: 16px;
+		flex-shrink: 0;
 	}
 	.wg-popup-info {
 		flex: 1;
@@ -610,18 +611,20 @@
 	}
 	.wg-popup-info .wg-username-link {
 		font-size: 14px;
+		font-weight: 600;
 	}
 	.wg-popup-info .wg-location-line {
 		font-size: 11px;
+		margin-top: 2px;
 	}
 	.wg-popup-card .wg-stats-row {
-		margin-top: 8px;
-		padding: 6px 0;
+		margin-top: 6px;
+		padding: 4px 0;
 	}
-	.wg-popup-card .wg-stat-num { font-size: 13px; }
+	.wg-popup-card .wg-stat-num { font-size: 13px; font-weight: 700; }
 	.wg-popup-card .wg-stat-label { font-size: 9px; }
-	.wg-popup-card .wg-actions { margin-top: 8px; }
-	.wg-popup-card .wg-action-btn { padding: 6px 8px; font-size: 11px; }
+	.wg-popup-card .wg-actions { margin-top: 6px; gap: 4px; }
+	.wg-popup-card .wg-action-btn { padding: 6px 8px; font-size: 11px; flex: 1; }
 
 	/* ---------- Responsive ---------- */
 	@media (max-width: 768px) {
@@ -1123,27 +1126,32 @@
 				marker.on('popupopen', function (ev) {
 					var popupEl = ev.popup.getElement();
 					if (!popupEl) return;
+					
+					// Update popup button to reflect current state
 					var fBtn = popupEl.querySelector('[data-popup-follow]');
 					if (fBtn) {
+						var isFollowing = state.followingSet[user.uid];
+						fBtn.textContent = isFollowing ? '\u2713 Following' : '+ Follow';
+						if (isFollowing) {
+							fBtn.classList.add('following');
+						} else {
+							fBtn.classList.remove('following');
+						}
+						
 						fBtn.addEventListener('click', function (e) {
 							e.stopPropagation();
 							followUser(user.uid, fBtn);
-							// also reflect in the card below if present
+							// Sync to card below
 							var cardBtn = document.querySelector('[data-follow-uid="' + user.uid + '"]');
-							if (cardBtn && cardBtn !== fBtn) {
-								// state.followingSet is updated by followUser on success
+							if (cardBtn) {
 								setTimeout(function () {
-									if (state.followingSet[user.uid]) {
-										cardBtn.classList.add('following');
-										cardBtn.textContent = '\u2713 Following';
-									} else {
-										cardBtn.classList.remove('following');
-										cardBtn.textContent = '+ Follow';
-									}
-								}, 350);
+									cardBtn.textContent = state.followingSet[user.uid] ? '\u2713 Following' : '+ Follow';
+									cardBtn.classList.toggle('following', state.followingSet[user.uid]);
+								}, 100);
 							}
 						});
 					}
+					
 					var cBtn = popupEl.querySelector('[data-popup-chat]');
 					if (cBtn) {
 						cBtn.addEventListener('click', function (e) {
@@ -1319,6 +1327,14 @@
 				e.stopPropagation();
 				var fuid = parseInt(followBtn.getAttribute('data-follow-uid'), 10);
 				followUser(fuid, followBtn);
+				// Also sync to popup if it's open for this user
+				setTimeout(function () {
+					var popupFollow = document.querySelector('.leaflet-popup [data-popup-follow]');
+					if (popupFollow) {
+						popupFollow.textContent = state.followingSet[fuid] ? '\u2713 Following' : '+ Follow';
+						popupFollow.classList.toggle('following', state.followingSet[fuid]);
+					}
+				}, 100);
 				return;
 			}
 
