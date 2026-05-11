@@ -818,6 +818,17 @@
 				state.allUsers = (payload && payload.users) ? payload.users : [];
 				state.isPrivileged = !!(payload && payload.isPrivileged);
 				state.callerLocation = (payload && payload.callerLocation) ? payload.callerLocation : null;
+				
+				// Populate followingSet from API response
+				state.followingSet = {};
+				if (state.allUsers && Array.isArray(state.allUsers)) {
+					state.allUsers.forEach(function (u) {
+						if (u.uid && typeof u.following === 'boolean') {
+							state.followingSet[u.uid] = u.following;
+						}
+					});
+				}
+				
 				applyClientFilters();
 				renderMarkers();
 				updateFooterStats();
@@ -1136,32 +1147,31 @@
 					if (fBtn) {
 						var isFollowing = state.followingSet[user.uid];
 						fBtn.textContent = isFollowing ? '\u2713 Following' : '+ Follow';
-						if (isFollowing) {
-							fBtn.classList.add('following');
-						} else {
-							fBtn.classList.remove('following');
-						}
+						fBtn.classList.toggle('following', isFollowing);
 						
-						fBtn.addEventListener('click', function (e) {
+						// Use onclick to prevent duplicate listeners from building up
+						fBtn.onclick = function (e) {
 							e.stopPropagation();
 							followUser(user.uid, fBtn);
-							// Sync to card below
-							var cardBtn = document.querySelector('[data-follow-uid="' + user.uid + '"]');
-							if (cardBtn) {
-								setTimeout(function () {
-									cardBtn.textContent = state.followingSet[user.uid] ? '\u2713 Following' : '+ Follow';
-									cardBtn.classList.toggle('following', state.followingSet[user.uid]);
-								}, 100);
-							}
-						});
+							// Sync ALL buttons for this user (grid + any other popups)
+							setTimeout(function () {
+								var allButtons = document.querySelectorAll('[data-follow-uid="' + user.uid + '"]');
+								var isNowFollowing = state.followingSet[user.uid];
+								allButtons.forEach(function (btn) {
+									btn.textContent = isNowFollowing ? '\u2713 Following' : '+ Follow';
+									btn.classList.toggle('following', isNowFollowing);
+								});
+							}, 50);
+						};
 					}
 					
 					var cBtn = popupEl.querySelector('[data-popup-chat]');
 					if (cBtn) {
-						cBtn.addEventListener('click', function (e) {
+						// Use onclick for consistency
+						cBtn.onclick = function (e) {
 							e.stopPropagation();
 							startChat(user.uid);
-						});
+						};
 					}
 				});
 			})(u);
@@ -1331,14 +1341,15 @@
 				e.stopPropagation();
 				var fuid = parseInt(followBtn.getAttribute('data-follow-uid'), 10);
 				followUser(fuid, followBtn);
-				// Also sync to popup if it's open for this user (only if UID matches)
+				// Sync ALL buttons for this user (popup + any other cards)
 				setTimeout(function () {
-					var popupFollow = document.querySelector('.leaflet-popup [data-popup-follow]');
-					if (popupFollow && parseInt(popupFollow.getAttribute('data-follow-uid'), 10) === fuid) {
-						popupFollow.textContent = state.followingSet[fuid] ? '\u2713 Following' : '+ Follow';
-						popupFollow.classList.toggle('following', state.followingSet[fuid]);
-					}
-				}, 100);
+					var allButtons = document.querySelectorAll('[data-follow-uid="' + fuid + '"]');
+					var isNowFollowing = state.followingSet[fuid];
+					allButtons.forEach(function (btn) {
+						btn.textContent = isNowFollowing ? '\u2713 Following' : '+ Follow';
+						btn.classList.toggle('following', isNowFollowing);
+					});
+				}, 50);
 				return;
 			}
 
