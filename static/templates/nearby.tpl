@@ -580,6 +580,49 @@
 		text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 	}
 
+	/* ---------- Map popup (rich card) ---------- */
+	.leaflet-popup.wg-marker-popup .leaflet-popup-content-wrapper {
+		border-radius: 10px;
+		box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+		padding: 0;
+	}
+	.leaflet-popup.wg-marker-popup .leaflet-popup-content {
+		margin: 12px 14px;
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+		line-height: 1.35;
+	}
+	.wg-popup-card {
+		min-width: 220px;
+	}
+	.wg-popup-top {
+		display: flex;
+		gap: 10px;
+		align-items: flex-start;
+	}
+	.wg-popup-avatar {
+		width: 40px;
+		height: 40px;
+		font-size: 16px;
+	}
+	.wg-popup-info {
+		flex: 1;
+		min-width: 0;
+	}
+	.wg-popup-info .wg-username-link {
+		font-size: 14px;
+	}
+	.wg-popup-info .wg-location-line {
+		font-size: 11px;
+	}
+	.wg-popup-card .wg-stats-row {
+		margin-top: 8px;
+		padding: 6px 0;
+	}
+	.wg-popup-card .wg-stat-num { font-size: 13px; }
+	.wg-popup-card .wg-stat-label { font-size: 9px; }
+	.wg-popup-card .wg-actions { margin-top: 8px; }
+	.wg-popup-card .wg-action-btn { padding: 6px 8px; font-size: 11px; }
+
 	/* ---------- Responsive ---------- */
 	@media (max-width: 768px) {
 		.wg-page { padding: 10px; }
@@ -603,7 +646,7 @@
 			Nearby Members
 			<span class="wg-count-badge" id="wg-count-badge">0</span>
 		</h1>
-		<a href="/directory" class="wg-footer-link" style="font-size:13px;">← All Members</a>
+		<a href="/users" class="wg-footer-link" style="font-size:13px;">← All Members</a>
 	</div>
 
 	<!-- Compact Filter Bar -->
@@ -611,16 +654,6 @@
 		<div class="wg-search-wrap">
 			<input type="text" id="wg-search" class="wg-search-input" placeholder="Search username..." autocomplete="off"/>
 		</div>
-		<select id="wg-radius" class="wg-select">
-			<option value="5">Within 5 mi</option>
-			<option value="10">Within 10 mi</option>
-			<option value="25" selected>Within 25 mi</option>
-			<option value="50">Within 50 mi</option>
-			<option value="100">Within 100 mi</option>
-			<option value="250">Within 250 mi</option>
-			<option value="500">Within 500 mi</option>
-			<option value="9999">Anywhere</option>
-		</select>
 		<select id="wg-role" class="wg-select">
 			<option value="">All roles</option>
 			<option value="administrator">Admins</option>
@@ -670,10 +703,6 @@
 			<div class="wg-footer-stat-row">
 				<span class="label">Members nearby</span>
 				<span class="value" id="wg-stat-nearby">—</span>
-			</div>
-			<div class="wg-footer-stat-row">
-				<span class="label">Within {selectedRadius} mi</span>
-				<span class="value" id="wg-stat-radius">—</span>
 			</div>
 			<div class="wg-footer-stat-row">
 				<span class="label">Groups represented</span>
@@ -760,11 +789,13 @@
 	// API
 	// ============================================================
 	function fetchUsersNearMe() {
-		var radius = $('wg-radius').value || '25';
 		var role = $('wg-role').value || '';
 		var group = $('wg-group').value || '';
 
-		var params = ['radius=' + encodeURIComponent(radius), 'limit=500'];
+		// No radius filter — request a very large radius so server returns every
+		// locatable user. The API still sorts results by Haversine distance,
+		// so cards/markers naturally appear nearest-first.
+		var params = ['radius=99999', 'limit=10000'];
 		if (role) params.push('roles=' + encodeURIComponent(role));
 		if (group) params.push('group=' + encodeURIComponent(group));
 
@@ -911,9 +942,46 @@
 			// actions
 			html += '<div class="wg-actions">';
 				html += '<button class="' + followClass + '" data-follow-uid="' + user.uid + '">' + followLabel + '</button>';
-				html += '<button class="wg-action-btn wg-chat-btn" data-chat-uid="' + user.uid + '" data-chat-username="' + escapeHtml(user.username || '') + '">💬 Chat</button>';
+				html += '<button class="wg-action-btn wg-chat-btn" data-chat-uid="' + user.uid + '">💬 Chat</button>';
 			html += '</div>';
 
+		html += '</div>';
+		return html;
+	}
+
+	// Rich popup card shown when a map marker is clicked.
+	// Same info density as the bottom cards, condensed for the popup width.
+	function buildPopupHtml(user) {
+		var distanceStr = (typeof user.distance === 'number') ? user.distance.toFixed(1) + ' mi away' : '';
+		var approxBadge = user.isApproximate ? '<span class="wg-approx-badge">~ ' + escapeHtml(user.approximateLevel || 'approx') + '</span>' : '';
+		var followLabel = state.followingSet[user.uid] ? '\u2713 Following' : '+ Follow';
+		var followClass = state.followingSet[user.uid] ? 'wg-action-btn wg-follow-btn following' : 'wg-action-btn wg-follow-btn';
+
+		var html = '';
+		html += '<div class="wg-popup-card">';
+			html += '<div class="wg-popup-top">';
+				html += '<div class="wg-avatar wg-popup-avatar">' + buildAvatarHtml(user) + '</div>';
+				html += '<div class="wg-popup-info">';
+					html += '<a class="wg-username-link" href="/user/' + escapeHtml(user.userslug || '') + '">' + escapeHtml(user.username || 'Unknown') + '</a>';
+					html += '<div class="wg-location-line">\ud83d\udccd ' + escapeHtml(buildLocationLine(user)) + '</div>';
+					if (distanceStr) {
+						html += '<span class="wg-distance-pill">' + escapeHtml(distanceStr) + '</span>' + approxBadge;
+					}
+				html += '</div>';
+			html += '</div>';
+
+			html += buildRolesHtml(user);
+
+			html += '<div class="wg-stats-row">';
+				html += '<div class="wg-stat"><div class="wg-stat-num">' + (user.reputation || 0) + '</div><div class="wg-stat-label">Rep</div></div>';
+				html += '<div class="wg-stat"><div class="wg-stat-num">' + (user.postcount || 0) + '</div><div class="wg-stat-label">Posts</div></div>';
+				html += '<div class="wg-stat"><div class="wg-stat-num">' + (user.followerCount || 0) + '</div><div class="wg-stat-label">Followers</div></div>';
+			html += '</div>';
+
+			html += '<div class="wg-actions">';
+				html += '<button class="' + followClass + '" data-popup-follow data-follow-uid="' + user.uid + '">' + followLabel + '</button>';
+				html += '<button class="wg-action-btn wg-chat-btn" data-popup-chat data-chat-uid="' + user.uid + '">\ud83d\udcac Chat</button>';
+			html += '</div>';
 		html += '</div>';
 		return html;
 	}
@@ -923,7 +991,7 @@
 		var users = state.filteredUsers;
 
 		if (state.visibleCount === 0 && users.length === 0) {
-			grid.innerHTML = '<div class="wg-empty"><div class="wg-empty-icon">🔍</div>No members found matching your filters.<br/><small>Try widening the radius or clearing filters.</small></div>';
+			grid.innerHTML = '<div class="wg-empty"><div class="wg-empty-icon">\ud83d\udd0d</div>No members found matching your filters.<br/><small>Try clearing filters or check your search term.</small></div>';
 			$('wg-load-more-indicator').style.display = 'none';
 			return;
 		}
@@ -1038,13 +1106,54 @@
 			var marker = L.circleMarker([lat, lng], {
 				radius: 7, fillColor: fill, color: '#fff', weight: 2, fillOpacity: 0.9,
 			});
-			var popupHtml = '<div style="min-width:160px;">' +
-				'<strong><a href="/user/' + escapeHtml(u.userslug || '') + '">' + escapeHtml(u.username || '') + '</a></strong><br/>' +
-				'<span style="color:#666;font-size:12px;">' + escapeHtml(buildLocationLine(u)) + '</span><br/>' +
-				(typeof u.distance === 'number' ? '<span style="color:#0066cc;font-size:12px;font-weight:600;">' + u.distance.toFixed(1) + ' mi away</span>' : '') +
-				'</div>';
-			marker.bindPopup(popupHtml);
-			marker.bindTooltip(escapeHtml(u.username || ''));
+
+			// Hover tooltip — shows just the username
+			marker.bindTooltip(escapeHtml(u.username || ''), { 
+				permanent: false, 
+				direction: 'top',
+				offset: [0, -12]
+			});
+
+			marker.bindPopup(buildPopupHtml(u), {
+				maxWidth: 280, minWidth: 240, className: 'wg-marker-popup', closeButton: true,
+			});
+
+			// Wire popup action buttons each time the popup opens
+			(function (user) {
+				marker.on('popupopen', function (ev) {
+					var popupEl = ev.popup.getElement();
+					if (!popupEl) return;
+					var fBtn = popupEl.querySelector('[data-popup-follow]');
+					if (fBtn) {
+						fBtn.addEventListener('click', function (e) {
+							e.stopPropagation();
+							followUser(user.uid, fBtn);
+							// also reflect in the card below if present
+							var cardBtn = document.querySelector('[data-follow-uid="' + user.uid + '"]');
+							if (cardBtn && cardBtn !== fBtn) {
+								// state.followingSet is updated by followUser on success
+								setTimeout(function () {
+									if (state.followingSet[user.uid]) {
+										cardBtn.classList.add('following');
+										cardBtn.textContent = '\u2713 Following';
+									} else {
+										cardBtn.classList.remove('following');
+										cardBtn.textContent = '+ Follow';
+									}
+								}, 350);
+							}
+						});
+					}
+					var cBtn = popupEl.querySelector('[data-popup-chat]');
+					if (cBtn) {
+						cBtn.addEventListener('click', function (e) {
+							e.stopPropagation();
+							startChat(user.uid);
+						});
+					}
+				});
+			})(u);
+
 			state.markerCluster.addLayer(marker);
 			state.markerMap[u.uid] = marker;
 			bounds.push([lat, lng]);
@@ -1114,12 +1223,52 @@
 			});
 	}
 
-	function startChat(username) {
-		if (typeof app !== 'undefined' && app.newChat) {
-			app.newChat(username);
-		} else {
-			window.location.href = '/chats/new/' + encodeURIComponent(username);
+	function startChat(uid) {
+		if (!uid) {
+			console.warn('[waymker-geo] startChat: uid is missing', uid);
+			return;
 		}
+		
+		console.log('[waymker-geo] startChat called with uid:', uid);
+		console.log('[waymker-geo] app.newChat available?', typeof app !== 'undefined' && typeof app.newChat === 'function');
+		console.log('[waymker-geo] socket available?', typeof socket !== 'undefined');
+		
+		// NodeBB v4's app.newChat accepts a uid (number). Username doesn't work.
+		if (typeof app !== 'undefined' && typeof app.newChat === 'function') {
+			try { 
+				console.log('[waymker-geo] attempting app.newChat(' + uid + ')');
+				app.newChat(parseInt(uid, 10)); 
+				console.log('[waymker-geo] app.newChat succeeded');
+				return; 
+			} catch (e) { 
+				console.error('[waymker-geo] app.newChat failed:', e.message);
+				/* fall through */ 
+			}
+		}
+		
+		// Socket fallback: create/open a room with this uid, then route to it.
+		if (typeof socket !== 'undefined' && socket.emit) {
+			console.log('[waymker-geo] attempting socket.emit(modules.chats.newRoom, touid=' + uid + ')');
+			socket.emit('modules.chats.newRoom', { touid: parseInt(uid, 10) }, function (err, roomId) {
+				if (err) {
+					console.error('[waymker-geo] socket newRoom failed:', err);
+					window.location.href = '/chats';
+					return;
+				}
+				if (!roomId) {
+					console.warn('[waymker-geo] socket newRoom returned no roomId');
+					window.location.href = '/chats';
+					return;
+				}
+				console.log('[waymker-geo] socket newRoom succeeded, roomId:', roomId);
+				window.location.href = '/chats/' + roomId;
+			});
+			return;
+		}
+		
+		// Last resort
+		console.log('[waymker-geo] falling back to /chats (no app.newChat or socket)');
+		window.location.href = '/chats';
 	}
 
 	// ============================================================
@@ -1127,16 +1276,6 @@
 	// ============================================================
 	function updateFooterStats() {
 		$('wg-stat-nearby').textContent = state.allUsers.length;
-		var r = $('wg-radius').value || '25';
-		$('wg-stat-radius').textContent = state.allUsers.length;
-
-		// Replace placeholder label with current radius
-		var radiusLabel = document.querySelector('.wg-footer-card .label');
-		// We have two .label nodes; update the second one (radius)
-		var labels = document.querySelectorAll('.wg-footer-card .label');
-		if (labels.length >= 2) {
-			labels[1].textContent = 'Within ' + r + ' mi';
-		}
 
 		// Count unique groups
 		var groupSet = {};
@@ -1179,8 +1318,8 @@
 			var chatBtn = t.closest && t.closest('[data-chat-uid]');
 			if (chatBtn) {
 				e.stopPropagation();
-				var uname = chatBtn.getAttribute('data-chat-username');
-				startChat(uname);
+				var chatUid = parseInt(chatBtn.getAttribute('data-chat-uid'), 10);
+				startChat(chatUid);
 				return;
 			}
 
@@ -1198,21 +1337,7 @@
 			}
 		});
 
-		// Hover → tooltip on marker
-		grid.addEventListener('mouseover', function (e) {
-			var card = e.target.closest && e.target.closest('.wg-card');
-			if (!card) return;
-			var uid = parseInt(card.getAttribute('data-uid'), 10);
-			var marker = state.markerMap[uid];
-			if (marker && marker.openTooltip) marker.openTooltip();
-		});
-		grid.addEventListener('mouseout', function (e) {
-			var card = e.target.closest && e.target.closest('.wg-card');
-			if (!card) return;
-			var uid = parseInt(card.getAttribute('data-uid'), 10);
-			var marker = state.markerMap[uid];
-			if (marker && marker.closeTooltip) marker.closeTooltip();
-		});
+		// Hover-to-tooltip on markers was removed in Phase 4.1 — popup carries all the info now.
 	}
 
 	function toggleMenu(menuBtn) {
@@ -1242,10 +1367,7 @@
 			if (action === 'profile') {
 				window.location.href = '/user/' + encodeURIComponent(userslug);
 			} else if (action === 'chat') {
-				var uname = '';
-				var user = state.filteredUsers.find(function (u) { return u.uid === uid; });
-				if (user) uname = user.username;
-				startChat(uname);
+				startChat(uid);
 			} else if (action === 'copy') {
 				var url = window.location.origin + '/user/' + userslug;
 				if (navigator.clipboard) navigator.clipboard.writeText(url);
@@ -1298,13 +1420,12 @@
 		}, 200);
 		searchInput.addEventListener('input', debouncedSearch);
 
-		['wg-radius', 'wg-role', 'wg-group'].forEach(function (id) {
+		['wg-role', 'wg-group'].forEach(function (id) {
 			$(id).addEventListener('change', function () { fetchUsersNearMe(); });
 		});
 
 		$('wg-reset').addEventListener('click', function () {
 			$('wg-search').value = '';
-			$('wg-radius').value = '25';
 			$('wg-role').value = '';
 			$('wg-group').value = '';
 			fetchUsersNearMe();
