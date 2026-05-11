@@ -580,25 +580,41 @@
 			var card = e.target.closest('.wg-card');
 			if (!card) return;
 			var uid = parseInt(card.getAttribute('data-uid'), 10);
-			if (!uid || !state.markerMap[uid]) return;
+			if (!uid || !state.markerMap[uid]) {
+				console.warn('[waymker-geo] Card clicked but marker not found for uid:', uid);
+				return;
+			}
 
 			var marker = state.markerMap[uid];
-			var latlng = marker.getLatLng();
+			if (!marker || !state.map) {
+				console.warn('[waymker-geo] Marker or map not ready yet');
+				return;
+			}
 
-			// Center map on this marker
-			state.map.flyTo(latlng, 13, { duration: 0.8 });
+			try {
+				var latlng = marker.getLatLng();
+				if (!latlng || typeof latlng.lat !== 'number') {
+					console.warn('[waymker-geo] Invalid latlng:', latlng);
+					return;
+				}
 
-			// Highlight the card
-			document.querySelectorAll('.wg-card.wg-highlight').forEach(function(el) {
-				el.classList.remove('wg-highlight');
-			});
-			card.classList.add('wg-highlight');
-			setTimeout(function() { card.classList.remove('wg-highlight'); }, 2000);
+				// Center map on this marker
+				state.map.flyTo(latlng, 13, { duration: 0.8 });
 
-			// Scroll map into view if needed
-			var mapEl = document.querySelector('#wg-map');
-			if (mapEl && mapEl.getBoundingClientRect().top < 0) {
-				mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+				// Highlight the card
+				document.querySelectorAll('.wg-card.wg-highlight').forEach(function(el) {
+					el.classList.remove('wg-highlight');
+				});
+				card.classList.add('wg-highlight');
+				setTimeout(function() { card.classList.remove('wg-highlight'); }, 2000);
+
+				// Scroll map into view if needed
+				var mapEl = document.querySelector('#wg-map');
+				if (mapEl && mapEl.getBoundingClientRect().top < 0) {
+					mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+				}
+			} catch (err) {
+				console.error('[waymker-geo] Error centering map:', err);
 			}
 		});
 	}
